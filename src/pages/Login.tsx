@@ -33,16 +33,17 @@ const Login = () => {
     setIsLoading(false);
     
     if (result) {
-      // Immediately redirect based on role without setTimeout
+      // Define redirects based on user role
       const roleRedirects: Record<UserRole, string> = {
         admin: "/admin",
         waiter: "/waiter",
         chef: "/chef",
         customer: "/customer",
       };
-      // Type assertion to treat result as UserRole since login returns the user role on success
+      
+      // Navigate to the appropriate dashboard
       navigate(roleRedirects[result as UserRole]);
-      toast.success(`Redirecting to ${result} dashboard...`);
+      toast.success(`Logged in as ${result} successfully!`);
     }
   };
 

@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import Layout from "@/components/Layout";
 import OrderCard from "@/components/OrderCard";
@@ -17,10 +17,16 @@ const WaiterHome = () => {
   const { orders, updateOrderStatus, currentUser } = useApp();
   
   // Redirect if not logged in as waiter
-  if (!currentUser || currentUser.role !== "waiter") {
-    navigate("/login");
-    return null;
-  }
+  useEffect(() => {
+    if (!currentUser || currentUser.role !== "waiter") {
+      navigate("/login");
+    }
+  }, [currentUser, navigate]);
+
+  // For debugging
+  useEffect(() => {
+    console.log("Current orders in WaiterHome:", orders);
+  }, [orders]);
 
   // Filter orders based on search query
   const filteredOrders = orders.filter(

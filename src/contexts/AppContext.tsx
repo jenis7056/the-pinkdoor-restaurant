@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { User, Customer, MenuItem, Order, Category, UserRole, OrderStatus, OrderItem } from "@/types";
 import { menuData } from "@/data/menuItems";
@@ -125,6 +126,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   useEffect(() => {
     localStorage.setItem('orders', JSON.stringify(orders));
+    // Debug log to see orders state
+    console.log("Updated orders:", orders);
   }, [orders]);
 
   useEffect(() => {
@@ -220,12 +223,15 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       updatedAt: new Date().toISOString(),
     };
     
+    console.log("Creating new order:", newOrder);
     setOrders(prev => [...prev, newOrder]);
     setCart([]);  // Clear the cart after ordering
     toast.success('Your order has been placed successfully!');
   };
 
   const updateOrderStatus = (orderId: string, status: OrderStatus) => {
+    console.log("Updating order status:", orderId, status);
+    
     setOrders(prev => 
       prev.map(order => 
         order.id === orderId 
