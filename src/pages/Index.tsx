@@ -46,9 +46,34 @@ const Index = () => {
     return (
       <div className="mt-8">
         <h2 className="text-2xl font-playfair font-semibold text-center mb-8">
-          Select Your Role
+          Select Your Portal
         </h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
+          {/* Customer Portal Card */}
+          <Card className="bg-gradient-to-br from-pink-50 to-white border-pink-100 hover:shadow-md transition-shadow">
+            <CardContent className="p-6">
+              <div className="flex flex-col items-center text-center">
+                <div className="h-16 w-16 rounded-full bg-pink-100 flex items-center justify-center mb-4">
+                  <Clipboard className="h-8 w-8 text-pink-800" />
+                </div>
+                <h4 className="text-xl font-medium mb-4">Customer Portal</h4>
+                <p className="text-sm text-gray-600 mb-6">Browse menu and place orders</p>
+                <Button 
+                  className="bg-pink-700 hover:bg-pink-800 w-full"
+                  onClick={() => navigate("/customer-registration")}
+                >
+                  Register as Customer
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        <h2 className="text-2xl font-playfair font-semibold text-center mb-8 mt-12">
+          Staff Portals
+        </h2>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
+          {/* Admin Portal Card */}
           <Card className="bg-gradient-to-br from-pink-50 to-white border-pink-100 hover:shadow-md transition-shadow">
             <CardContent className="p-6">
               <div className="flex flex-col items-center text-center">
@@ -67,6 +92,7 @@ const Index = () => {
             </CardContent>
           </Card>
 
+          {/* Waiter Portal Card */}
           <Card className="bg-gradient-to-br from-pink-50 to-white border-pink-100 hover:shadow-md transition-shadow">
             <CardContent className="p-6">
               <div className="flex flex-col items-center text-center">
@@ -85,6 +111,7 @@ const Index = () => {
             </CardContent>
           </Card>
 
+          {/* Chef Portal Card */}
           <Card className="bg-gradient-to-br from-pink-50 to-white border-pink-100 hover:shadow-md transition-shadow">
             <CardContent className="p-6">
               <div className="flex flex-col items-center text-center">
@@ -98,24 +125,6 @@ const Index = () => {
                   onClick={() => navigate("/login")}
                 >
                   Login as Chef
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="bg-gradient-to-br from-pink-50 to-white border-pink-100 hover:shadow-md transition-shadow">
-            <CardContent className="p-6">
-              <div className="flex flex-col items-center text-center">
-                <div className="h-16 w-16 rounded-full bg-pink-100 flex items-center justify-center mb-4">
-                  <Clipboard className="h-8 w-8 text-pink-800" />
-                </div>
-                <h4 className="text-xl font-medium mb-4">Customer Portal</h4>
-                <p className="text-sm text-gray-600 mb-6">Browse menu and place orders</p>
-                <Button 
-                  className="bg-pink-700 hover:bg-pink-800 w-full"
-                  onClick={() => navigate("/customer-registration")}
-                >
-                  Register as Customer
                 </Button>
               </div>
             </CardContent>
