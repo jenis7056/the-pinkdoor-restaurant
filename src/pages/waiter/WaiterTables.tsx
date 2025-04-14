@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Layout from "@/components/Layout";
@@ -20,8 +19,8 @@ const WaiterTables = () => {
     return null;
   }
 
-  // Create an array of table numbers from 1 to 20 (can be adjusted based on restaurant size)
-  const allTables = Array.from({ length: 20 }, (_, i) => i + 1);
+  // Create an array of table numbers from 1 to 15
+  const allTables = Array.from({ length: 15 }, (_, i) => i + 1);
 
   // Filter tables based on search query
   const filteredTables = searchQuery
