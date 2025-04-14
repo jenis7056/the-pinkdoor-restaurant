@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, Search, Users } from "lucide-react";
+import { ArrowLeft, ExternalLink, Search, Users } from "lucide-react";
 
 const WaiterTables = () => {
   const navigate = useNavigate();
@@ -55,6 +55,12 @@ const WaiterTables = () => {
     if (tableCustomers.length > 0) return "occupied";
     
     return "available";
+  };
+
+  // Open customer view in new tab
+  const openCustomerView = (tableNumber: number) => {
+    const url = `/customer?tableNumber=${tableNumber}`;
+    window.open(window.location.origin + url, '_blank');
   };
 
   const statusLabels = {
@@ -155,17 +161,27 @@ const WaiterTables = () => {
                     <p className="text-gray-500">No customers at this table</p>
                   )}
                 </CardContent>
-                {(status === "pending" || status === "ready") && (
-                  <CardFooter className="pt-2">
+                <CardFooter className="pt-2 flex justify-between">
+                  {(status === "pending" || status === "ready") && (
                     <Button 
-                      className="w-full bg-pink-700 hover:bg-pink-800"
+                      className="bg-pink-700 hover:bg-pink-800 flex-1 mr-2"
                       size="sm"
                       onClick={() => navigate("/waiter")}
                     >
                       {status === "pending" ? "View Orders to Confirm" : "View Ready Orders"}
                     </Button>
-                  </CardFooter>
-                )}
+                  )}
+                  
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    className="flex items-center border-pink-200 hover:bg-pink-50 ml-auto"
+                    onClick={() => openCustomerView(tableNumber)}
+                  >
+                    <ExternalLink className="h-3.5 w-3.5 mr-1" />
+                    View Menu
+                  </Button>
+                </CardFooter>
               </Card>
             );
           })}

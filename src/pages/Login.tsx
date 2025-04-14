@@ -41,8 +41,17 @@ const Login = () => {
         customer: "/customer",
       };
       
-      // Navigate to the appropriate dashboard
-      navigate(roleRedirects[result as UserRole]);
+      // Get the destination path based on user role
+      const destinationPath = roleRedirects[result as UserRole];
+      
+      // For staff roles, open in new tab
+      if (result === 'waiter' || result === 'admin' || result === 'chef') {
+        window.open(window.location.origin + destinationPath, '_blank');
+      } else {
+        // For customers, navigate normally
+        navigate(destinationPath);
+      }
+      
       toast.success(`Logged in as ${result} successfully!`);
     }
   };
