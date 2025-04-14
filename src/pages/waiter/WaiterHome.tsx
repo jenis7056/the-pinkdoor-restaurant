@@ -37,7 +37,7 @@ const WaiterHome = () => {
   );
 
   // Filter orders based on status
-  const getOrdersByStatus = (status: string): typeof orders => {
+  const getOrdersByStatus = (status: string) => {
     if (status === "all") return filteredOrders.filter(order => order.status !== "completed");
     if (status === "pending") return filteredOrders.filter(order => order.status === "pending");
     if (status === "ready") return filteredOrders.filter(order => order.status === "ready");
