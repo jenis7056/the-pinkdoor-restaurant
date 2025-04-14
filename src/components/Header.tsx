@@ -1,4 +1,3 @@
-
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { useApp } from "@/contexts/AppContext";
@@ -18,7 +17,7 @@ interface HeaderProps {
   title?: string;
 }
 
-const Header = ({ title = "The PinkDoor Restaurant" }: HeaderProps) => {
+const Header = ({ title = "THE PINKDOOR RESTAURANT" }: HeaderProps) => {
   const { currentUser, logout, currentCustomer, cart } = useApp();
   const navigate = useNavigate();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -59,7 +58,6 @@ const Header = ({ title = "The PinkDoor Restaurant" }: HeaderProps) => {
     <header className="bg-gradient-to-r from-pink-700 via-pink-800 to-pink-900 text-white shadow-lg sticky top-0 z-50 transition-all duration-300 ease-in-out">
       <div className="container mx-auto px-4 py-3 flex items-center justify-between">
         <div className="flex items-center space-x-4">
-          {/* Mobile Menu */}
           <Sheet open={isMenuOpen} onOpenChange={setIsMenuOpen}>
             <SheetTrigger asChild className="md:hidden">
               <Button 
@@ -72,7 +70,7 @@ const Header = ({ title = "The PinkDoor Restaurant" }: HeaderProps) => {
             </SheetTrigger>
             <SheetContent side="left" className="w-[240px] sm:w-[300px] bg-pink-50 text-pink-950">
               <SheetHeader>
-                <SheetTitle className="text-pink-900">The PinkDoor</SheetTitle>
+                <SheetTitle className="text-pink-900">THE PINKDOOR</SheetTitle>
               </SheetHeader>
               <nav className="flex flex-col py-6">
                 {links.map((link, index) => (
@@ -144,7 +142,6 @@ const Header = ({ title = "The PinkDoor Restaurant" }: HeaderProps) => {
             </SheetContent>
           </Sheet>
         
-          {/* Logo with hover effect */}
           <h1 
             className="text-xl md:text-2xl font-playfair font-semibold cursor-pointer hover:text-pink-200 transition-colors duration-300 ease-in-out"
             onClick={() => navigate("/")}
@@ -153,7 +150,6 @@ const Header = ({ title = "The PinkDoor Restaurant" }: HeaderProps) => {
           </h1>
         </div>
 
-        {/* Desktop Navigation with hover and transition effects */}
         <nav className="hidden md:flex items-center space-x-6">
           {links.map((link, index) => (
             <Button 
@@ -167,7 +163,6 @@ const Header = ({ title = "The PinkDoor Restaurant" }: HeaderProps) => {
           ))}
         </nav>
 
-        {/* Right side actions with refined styling */}
         <div className="flex items-center space-x-4">
           {currentCustomer && (
             <Button
@@ -187,7 +182,6 @@ const Header = ({ title = "The PinkDoor Restaurant" }: HeaderProps) => {
             </Button>
           )}
 
-          {/* User/Login section with smooth transitions */}
           {(currentUser || currentCustomer) ? (
             <div className="flex items-center space-x-3">
               <div className="hidden md:block text-sm">

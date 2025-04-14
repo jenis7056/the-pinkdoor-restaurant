@@ -139,7 +139,7 @@ const Index = () => {
       <section className="bg-gradient-to-b from-pink-50 to-white py-16">
         <div className="container mx-auto px-4 text-center">
           <h1 className="text-4xl md:text-5xl font-playfair font-bold text-pink-900 mb-6">
-            Welcome to The PinkDoor Restaurant
+            Welcome to THE PINKDOOR RESTAURANT
           </h1>
           <p className="text-lg text-gray-700 max-w-3xl mx-auto mb-8">
             Experience the finest vegetarian cuisine in an elegant atmosphere. 

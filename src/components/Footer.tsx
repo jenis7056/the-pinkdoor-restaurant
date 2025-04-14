@@ -8,7 +8,7 @@ const Footer = () => {
       <div className="container mx-auto px-4">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           <div>
-            <h3 className="text-xl font-playfair font-semibold mb-4">The PinkDoor Restaurant</h3>
+            <h3 className="text-xl font-playfair font-semibold mb-4">THE PINKDOOR RESTAURANT</h3>
             <p className="text-gray-300 text-sm">
               Experience the best of vegetarian cuisine in an elegant atmosphere.
               Our restaurant offers a wide variety of dishes prepared with fresh ingredients.
@@ -58,7 +58,7 @@ const Footer = () => {
         </div>
         
         <div className="border-t border-pink-900 mt-8 pt-4 text-center text-sm text-gray-400">
-          <p>&copy; {new Date().getFullYear()} The PinkDoor Restaurant. All rights reserved.</p>
+          <p>&copy; {new Date().getFullYear()} THE PINKDOOR RESTAURANT. All rights reserved.</p>
         </div>
       </div>
     </footer>
