@@ -1,6 +1,13 @@
 
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
+import { 
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger
+} from "@/components/ui/dropdown-menu";
+import { ChevronDown } from "lucide-react";
 import { UserRole } from "@/types";
 
 interface UserActionsProps {
@@ -11,6 +18,14 @@ interface UserActionsProps {
 
 const UserActions = ({ currentUser, currentCustomer, logout }: UserActionsProps) => {
   const navigate = useNavigate();
+  
+  // Role navigation paths
+  const roleRedirects: Record<UserRole, string> = {
+    admin: "/admin",
+    waiter: "/waiter",
+    chef: "/chef",
+    customer: "/customer",
+  };
   
   if (currentUser || currentCustomer) {
     return (
@@ -32,6 +47,35 @@ const UserActions = ({ currentUser, currentCustomer, logout }: UserActionsProps)
             </div>
           )}
         </div>
+        
+        {/* Staff Portal Switcher - only show for staff */}
+        {currentUser && (
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button 
+                variant="outline" 
+                size="sm"
+                className="bg-pink-700 hover:bg-pink-800 text-white border-pink-600 mr-2"
+              >
+                Switch Portal <ChevronDown className="ml-1 h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              {Object.entries(roleRedirects).map(([role, path]) => (
+                role !== 'customer' && (
+                  <DropdownMenuItem 
+                    key={role}
+                    onClick={() => navigate(path)}
+                    className="capitalize"
+                  >
+                    {role} Portal
+                  </DropdownMenuItem>
+                )
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
+        )}
+        
         <Button 
           variant="outline" 
           size="sm"
