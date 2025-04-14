@@ -56,13 +56,17 @@ const Header = ({ title = "The PinkDoor Restaurant" }: HeaderProps) => {
   const links = currentUser ? getRoleBasedLinks(currentUser.role) : [];
 
   return (
-    <header className="bg-pink-700 text-white shadow-md">
+    <header className="bg-gradient-to-r from-pink-700 via-pink-800 to-pink-900 text-white shadow-lg sticky top-0 z-50 transition-all duration-300 ease-in-out">
       <div className="container mx-auto px-4 py-3 flex items-center justify-between">
         <div className="flex items-center space-x-4">
           {/* Mobile Menu */}
           <Sheet open={isMenuOpen} onOpenChange={setIsMenuOpen}>
             <SheetTrigger asChild className="md:hidden">
-              <Button variant="ghost" size="icon" className="text-white hover:bg-pink-600">
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                className="text-white hover:bg-pink-600 hover:text-white transition-colors duration-200"
+              >
                 <Menu className="h-6 w-6" />
               </Button>
             </SheetTrigger>
@@ -140,22 +144,22 @@ const Header = ({ title = "The PinkDoor Restaurant" }: HeaderProps) => {
             </SheetContent>
           </Sheet>
         
-          {/* Logo */}
+          {/* Logo with hover effect */}
           <h1 
-            className="text-xl md:text-2xl font-playfair font-semibold cursor-pointer"
+            className="text-xl md:text-2xl font-playfair font-semibold cursor-pointer hover:text-pink-200 transition-colors duration-300 ease-in-out"
             onClick={() => navigate("/")}
           >
             {title}
           </h1>
         </div>
 
-        {/* Desktop Navigation */}
+        {/* Desktop Navigation with hover and transition effects */}
         <nav className="hidden md:flex items-center space-x-6">
           {links.map((link, index) => (
             <Button 
               key={index}
               variant="ghost" 
-              className="text-white hover:bg-pink-600"
+              className="text-white hover:bg-pink-600 hover:text-white transition-all duration-200 ease-in-out transform hover:scale-105"
               onClick={() => navigate(link.path)}
             >
               {link.name}
@@ -163,44 +167,50 @@ const Header = ({ title = "The PinkDoor Restaurant" }: HeaderProps) => {
           ))}
         </nav>
 
+        {/* Right side actions with refined styling */}
         <div className="flex items-center space-x-4">
           {currentCustomer && (
             <Button
               variant="ghost"
               size="icon"
-              className="text-white hover:bg-pink-600 relative"
+              className="text-white hover:bg-pink-600 relative group transition-all duration-200"
               onClick={() => navigate("/customer/cart")}
             >
-              <ShoppingCart className="h-6 w-6" />
+              <ShoppingCart className="h-6 w-6 group-hover:scale-110 transition-transform" />
               {totalItems > 0 && (
-                <Badge className="absolute -top-2 -right-2 bg-accent text-accent-foreground">
+                <Badge 
+                  className="absolute -top-2 -right-2 bg-accent text-accent-foreground animate-pulse"
+                >
                   {totalItems}
                 </Badge>
               )}
             </Button>
           )}
 
+          {/* User/Login section with smooth transitions */}
           {(currentUser || currentCustomer) ? (
             <div className="flex items-center space-x-3">
               <div className="hidden md:block text-sm">
                 {currentCustomer ? (
-                  <div>
+                  <div className="animate-fade-in">
                     <p className="font-medium">{currentCustomer.name}</p>
                     {currentCustomer.tableNumber && (
-                      <p className="text-xs text-gray-200">Table #{currentCustomer.tableNumber}</p>
+                      <p className="text-xs text-pink-200 animate-pulse">
+                        Table #{currentCustomer.tableNumber}
+                      </p>
                     )}
                   </div>
                 ) : (
-                  <div>
+                  <div className="animate-fade-in">
                     <p className="font-medium">{currentUser?.name}</p>
-                    <p className="text-xs text-gray-200 capitalize">{currentUser?.role}</p>
+                    <p className="text-xs text-pink-200 capitalize">{currentUser?.role}</p>
                   </div>
                 )}
               </div>
               <Button 
                 variant="outline" 
                 size="sm"
-                className="bg-pink-800 hover:bg-pink-900 text-white border-pink-600"
+                className="bg-pink-800 hover:bg-pink-900 text-white border-pink-600 transition-all duration-300 hover:shadow-lg hover:scale-105"
                 onClick={() => {
                   logout();
                   navigate("/");
@@ -213,14 +223,14 @@ const Header = ({ title = "The PinkDoor Restaurant" }: HeaderProps) => {
             <div className="flex items-center space-x-2">
               <Button 
                 variant="ghost" 
-                className="hidden md:inline-block text-white hover:bg-pink-600"
+                className="hidden md:inline-block text-white hover:bg-pink-600 transition-all duration-200 hover:scale-105"
                 onClick={() => navigate("/login")}
               >
                 Staff Login
               </Button>
               <Button 
                 variant="outline" 
-                className="bg-pink-800 hover:bg-pink-900 text-white border-pink-600"
+                className="bg-pink-800 hover:bg-pink-900 text-white border-pink-600 transition-all duration-300 hover:shadow-lg hover:scale-105"
                 onClick={() => navigate("/customer-registration")}
               >
                 Customer
