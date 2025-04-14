@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useApp } from "@/contexts/AppContext";
@@ -44,13 +43,8 @@ const Login = () => {
       // Get the destination path based on user role
       const destinationPath = roleRedirects[result as UserRole];
       
-      // For staff roles, open in new tab
-      if (result === 'waiter' || result === 'admin' || result === 'chef') {
-        window.open(window.location.origin + destinationPath, '_blank');
-      } else {
-        // For customers, navigate normally
-        navigate(destinationPath);
-      }
+      // Navigate normally for all roles
+      navigate(destinationPath);
       
       toast.success(`Logged in as ${result} successfully!`);
     }
