@@ -1,6 +1,5 @@
-
 import React, { createContext, useContext, useState, useEffect } from "react";
-import { User, Customer, MenuItem, Order, Category, UserRole, OrderStatus } from "@/types";
+import { User, Customer, MenuItem, Order, Category, UserRole, OrderStatus, OrderItem } from "@/types";
 import { menuData } from "@/data/menuItems";
 import { categoriesData } from "@/data/categories";
 import { toast } from "sonner";
@@ -8,7 +7,7 @@ import { toast } from "sonner";
 interface AppContextType {
   // Authentication
   currentUser: User | null;
-  login: (username: string, password: string) => boolean;
+  login: (username: string, password: string) => UserRole | false;
   logout: () => void;
   
   // Menu Management
@@ -133,12 +132,12 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   }, [cart]);
 
   // Authentication functions
-  const login = (username: string, password: string): boolean => {
+  const login = (username: string, password: string): UserRole | false => {
     const user = predefinedUsers.find(u => u.username === username);
     if (user && passwords[username] === password) {
       setCurrentUser(user);
       toast.success(`Welcome, ${user.name}!`);
-      return true;
+      return user.role; // Return the user role for redirection
     }
     toast.error('Invalid username or password');
     return false;

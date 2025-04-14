@@ -28,11 +28,11 @@ const Login = () => {
     setIsLoading(true);
     
     // Attempt login
-    const success = login(username, password);
+    const result = login(username, password);
     
     setIsLoading(false);
     
-    if (success) {
+    if (result) {
       // Redirect based on role
       setTimeout(() => {
         const roleRedirects: Record<UserRole, string> = {
@@ -41,7 +41,8 @@ const Login = () => {
           chef: "/chef",
           customer: "/customer",
         };
-        navigate(roleRedirects[success as UserRole] || "/");
+        // Type assertion to treat result as UserRole since login returns the user role on success
+        navigate(roleRedirects[result as UserRole] || "/");
       }, 100);
     }
   };
