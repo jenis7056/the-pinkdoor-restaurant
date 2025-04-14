@@ -8,6 +8,11 @@ export const handleRegisterCustomer = (
   setCustomers: React.Dispatch<React.SetStateAction<Customer[]>>,
   setCurrentCustomer: React.Dispatch<React.SetStateAction<Customer | null>>
 ) => {
+  // Validate table number is within allowed range
+  if (tableNumber < 1 || tableNumber > 15) {
+    throw new Error("Table number must be between 1 and 15");
+  }
+  
   const newCustomer = {
     id: crypto.randomUUID(),
     name,

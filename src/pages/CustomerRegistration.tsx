@@ -24,15 +24,21 @@ const CustomerRegistration = () => {
       return;
     }
 
-    if (!tableNumber || isNaN(parseInt(tableNumber))) {
+    const tableNum = parseInt(tableNumber);
+    if (!tableNumber || isNaN(tableNum)) {
       toast.error("Please enter a valid table number");
+      return;
+    }
+    
+    if (tableNum < 1 || tableNum > 15) {
+      toast.error("Table number must be between 1 and 15");
       return;
     }
 
     setIsLoading(true);
     
     try {
-      registerCustomer(name, parseInt(tableNumber));
+      registerCustomer(name, tableNum);
       
       setTimeout(() => {
         navigate("/customer");
@@ -73,17 +79,18 @@ const CustomerRegistration = () => {
                 <Input
                   id="tableNumber"
                   type="number"
-                  placeholder="Enter your table number"
+                  placeholder="Enter your table number (1-15)"
                   value={tableNumber}
                   onChange={(e) => setTableNumber(e.target.value)}
                   min="1"
+                  max="15"
                   disabled={isLoading}
                   className="border-pink-200 focus-visible:ring-pink-500"
                 />
               </div>
 
               <div className="text-sm text-gray-500">
-                <p>Please check your table for the correct table number or ask your waiter.</p>
+                <p>Please check your table for the correct table number (1-15) or ask your waiter.</p>
               </div>
             </CardContent>
             
