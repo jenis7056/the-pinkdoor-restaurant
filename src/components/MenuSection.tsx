@@ -77,7 +77,7 @@ const MenuSection = ({
       ) : (
         // Otherwise, show tabs for each subcategory
         <Tabs defaultValue={uncategorizedItems.length > 0 ? "_default" : subcategories[0]}>
-          <ScrollArea className="w-full whitespace-nowrap" orientation="horizontal">
+          <ScrollArea className="w-full whitespace-nowrap">
             <TabsList className="mb-6 bg-pink-50">
               {uncategorizedItems.length > 0 && (
                 <TabsTrigger value="_default" className="data-[state=active]:bg-white">

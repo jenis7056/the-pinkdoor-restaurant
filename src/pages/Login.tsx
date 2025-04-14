@@ -41,7 +41,7 @@ const Login = () => {
           chef: "/chef",
           customer: "/customer",
         };
-        navigate(roleRedirects[success] || "/");
+        navigate(roleRedirects[success as UserRole] || "/");
       }, 100);
     }
   };
