@@ -1,4 +1,3 @@
-
 import { useNavigate } from "react-router-dom";
 
 const Footer = () => {
@@ -52,7 +51,7 @@ const Footer = () => {
               <p>Shop 4 & 5, Pramukh Anand Orbit Mall</p>
               <p>Kudasan Road, Reliance Cross Rd</p>
               <p>Gandhinagar, Gujarat 382421</p>
-              <p className="mt-2">Phone: (555) 123-4567</p>
+              <p className="mt-2">Phone: 7359153555</p>
               <p>Email: info@pinkdoorrestaurant.com</p>
             </address>
           </div>
