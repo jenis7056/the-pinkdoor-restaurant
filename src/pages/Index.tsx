@@ -1,3 +1,4 @@
+
 import { useNavigate } from "react-router-dom";
 import Layout from "@/components/Layout";
 import { Button } from "@/components/ui/button";
@@ -47,7 +48,7 @@ const Index = () => {
         <h2 className="text-2xl font-playfair font-semibold text-center mb-8">
           Select Your Role
         </h2>
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-12">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
           <Card className="bg-gradient-to-br from-pink-50 to-white border-pink-100 hover:shadow-md transition-shadow">
             <CardContent className="p-6">
               <div className="flex flex-col items-center text-center">
