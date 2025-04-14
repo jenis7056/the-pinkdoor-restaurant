@@ -93,13 +93,6 @@ const Login = () => {
                   className="border-pink-200 focus-visible:ring-pink-500"
                 />
               </div>
-              
-              <div className="text-sm text-gray-500">
-                <h3 className="font-medium text-gray-700 mb-1">Demo Accounts:</h3>
-                <p>Admin: jenis7056 / Jenis@7056</p>
-                <p>Waiter: jyot / Jyot@7188</p>
-                <p>Chef: chef001 / chef@001</p>
-              </div>
             </CardContent>
             
             <CardFooter>
