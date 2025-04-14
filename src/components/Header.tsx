@@ -69,7 +69,7 @@ const Header = ({
             >
               {title}
             </h1>
-            <p className="text-xs md:text-sm text-pink-200 italic">
+            <p className="text-xs md:text-sm text-pink-200 italic font-playfair">
               {subtitle}
             </p>
           </div>
