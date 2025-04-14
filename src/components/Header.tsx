@@ -1,4 +1,3 @@
-
 import { useNavigate } from "react-router-dom";
 import { useApp } from "@/contexts/AppContext";
 import { UserRole } from "@/types";
@@ -9,9 +8,13 @@ import NavigationLinks from "./header/NavigationLinks";
 
 interface HeaderProps {
   title?: string;
+  subtitle?: string;
 }
 
-const Header = ({ title = "THE PINKDOOR RESTAURANT" }: HeaderProps) => {
+const Header = ({ 
+  title = "THE PINKDOOR RESTAURANT", 
+  subtitle = "A Multicuisine Restaurant Chain" 
+}: HeaderProps) => {
   const { currentUser, logout, currentCustomer, cart } = useApp();
   const navigate = useNavigate();
 
@@ -59,12 +62,17 @@ const Header = ({ title = "THE PINKDOOR RESTAURANT" }: HeaderProps) => {
             logout={logout}
           />
         
-          <h1 
-            className="text-xl md:text-2xl font-playfair font-semibold cursor-pointer hover:text-pink-200 transition-colors duration-300 ease-in-out"
-            onClick={() => navigate("/")}
-          >
-            {title}
-          </h1>
+          <div className="flex flex-col">
+            <h1 
+              className="text-xl md:text-2xl font-playfair font-semibold cursor-pointer hover:text-pink-200 transition-colors duration-300 ease-in-out"
+              onClick={() => navigate("/")}
+            >
+              {title}
+            </h1>
+            <p className="text-xs md:text-sm text-pink-200 italic">
+              {subtitle}
+            </p>
+          </div>
         </div>
 
         <NavigationLinks links={links} />
