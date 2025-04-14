@@ -49,8 +49,9 @@ const Footer = () => {
           <div>
             <h3 className="text-lg font-playfair font-semibold mb-4">Contact Us</h3>
             <address className="text-gray-300 text-sm not-italic">
-              <p>123 Dining Street</p>
-              <p>Foodville, FD 12345</p>
+              <p>Shop 4 & 5, Pramukh Anand Orbit Mall</p>
+              <p>Kudasan Road, Reliance Cross Rd</p>
+              <p>Gandhinagar, Gujarat 382421</p>
               <p className="mt-2">Phone: (555) 123-4567</p>
               <p>Email: info@pinkdoorrestaurant.com</p>
             </address>
