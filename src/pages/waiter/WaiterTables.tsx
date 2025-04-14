@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Layout from "@/components/Layout";
@@ -57,10 +58,9 @@ const WaiterTables = () => {
     return "available";
   };
 
-  // Open customer view in new tab
-  const openCustomerView = (tableNumber: number) => {
-    const url = `/customer?tableNumber=${tableNumber}`;
-    window.open(window.location.origin + url, '_blank');
+  // Navigate to customer view instead of opening in new tab
+  const goToCustomerView = (tableNumber: number) => {
+    navigate(`/customer?tableNumber=${tableNumber}`);
   };
 
   const statusLabels = {
@@ -176,7 +176,7 @@ const WaiterTables = () => {
                     variant="outline" 
                     size="sm"
                     className="flex items-center border-pink-200 hover:bg-pink-50 ml-auto"
-                    onClick={() => openCustomerView(tableNumber)}
+                    onClick={() => goToCustomerView(tableNumber)}
                   >
                     <ExternalLink className="h-3.5 w-3.5 mr-1" />
                     View Menu
