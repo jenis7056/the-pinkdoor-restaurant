@@ -33,17 +33,16 @@ const Login = () => {
     setIsLoading(false);
     
     if (result) {
-      // Redirect based on role
-      setTimeout(() => {
-        const roleRedirects: Record<UserRole, string> = {
-          admin: "/admin",
-          waiter: "/waiter",
-          chef: "/chef",
-          customer: "/customer",
-        };
-        // Type assertion to treat result as UserRole since login returns the user role on success
-        navigate(roleRedirects[result as UserRole] || "/");
-      }, 100);
+      // Immediately redirect based on role without setTimeout
+      const roleRedirects: Record<UserRole, string> = {
+        admin: "/admin",
+        waiter: "/waiter",
+        chef: "/chef",
+        customer: "/customer",
+      };
+      // Type assertion to treat result as UserRole since login returns the user role on success
+      navigate(roleRedirects[result as UserRole]);
+      toast.success(`Redirecting to ${result} dashboard...`);
     }
   };
 
