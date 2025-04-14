@@ -1,10 +1,13 @@
-import { useState } from "react";
+
+import { useState, useEffect } from "react";
 import { MenuItem as MenuItemType } from "@/types";
 import MenuItem from "./MenuItem";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Search } from "lucide-react";
+import { useApp } from "@/contexts/AppContext";
+import { Badge } from "@/components/ui/badge";
 
 interface MenuSectionProps {
   menuItems: MenuItemType[];
@@ -24,8 +27,42 @@ const MenuSection = ({
   onDelete,
 }: MenuSectionProps) => {
   const [searchQuery, setSearchQuery] = useState("");
+  const { orders, currentCustomer } = useApp();
 
-  const filteredItems = menuItems.filter(
+  // Track ordered items with their status
+  const getItemStatus = (menuItemId: string) => {
+    if (!currentCustomer) return null;
+    
+    // Find active orders for current customer
+    const activeOrders = orders.filter(
+      order => 
+        order.customerId === currentCustomer.id && 
+        order.status !== "completed"
+    );
+
+    // Look through order items to find matching menu item
+    for (const order of activeOrders) {
+      for (const item of order.items) {
+        if (item.menuItemId === menuItemId) {
+          return order.status;
+        }
+      }
+    }
+    
+    return null;
+  };
+
+  // Filter items to hide those that have been served
+  const displayableItems = menuItems.filter(
+    (item) => {
+      const status = getItemStatus(item.id);
+      // Show items that: 1) aren't ordered or 2) are not yet served
+      return !status || (status !== "served");
+    }
+  );
+  
+  // Apply search filter
+  const filteredItems = displayableItems.filter(
     (item) =>
       item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       item.description.toLowerCase().includes(searchQuery.toLowerCase())
@@ -41,6 +78,36 @@ const MenuSection = ({
     subcategory,
     items: filteredItems.filter((item) => item.subcategory === subcategory),
   }));
+
+  const statusBadgeStyles = {
+    pending: "bg-yellow-100 text-yellow-800",
+    confirmed: "bg-blue-100 text-blue-800",
+    preparing: "bg-orange-100 text-orange-800", 
+    ready: "bg-green-100 text-green-800",
+    served: "bg-purple-100 text-purple-800",
+  };
+
+  const renderMenuItem = (item: MenuItemType) => {
+    const status = getItemStatus(item.id);
+    return (
+      <div key={item.id} className="relative">
+        <MenuItem 
+          key={item.id} 
+          menuItem={item} 
+          isAdmin={isAdmin}
+          onEdit={onEdit}
+          onDelete={onDelete}
+        />
+        {status && (
+          <Badge 
+            className={`absolute top-2 right-2 ${statusBadgeStyles[status] || ""}`}
+          >
+            {status.charAt(0).toUpperCase() + status.slice(1)}
+          </Badge>
+        )}
+      </div>
+    );
+  };
 
   return (
     <div className="py-6">
@@ -64,15 +131,7 @@ const MenuSection = ({
       {(subcategories.length === 0 || filteredItems.length === 0) ? (
         // If no subcategories or no items match search, just show grid
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-          {filteredItems.map((item) => (
-            <MenuItem 
-              key={item.id} 
-              menuItem={item} 
-              isAdmin={isAdmin}
-              onEdit={onEdit}
-              onDelete={onDelete}
-            />
-          ))}
+          {filteredItems.map((item) => renderMenuItem(item))}
         </div>
       ) : (
         // Otherwise, show tabs for each subcategory
@@ -102,15 +161,7 @@ const MenuSection = ({
           {uncategorizedItems.length > 0 && (
             <TabsContent value="_default" className="mt-0">
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                {filteredItems.map((item) => (
-                  <MenuItem 
-                    key={item.id} 
-                    menuItem={item} 
-                    isAdmin={isAdmin}
-                    onEdit={onEdit}
-                    onDelete={onDelete}
-                  />
-                ))}
+                {filteredItems.map((item) => renderMenuItem(item))}
               </div>
             </TabsContent>
           )}
@@ -119,15 +170,7 @@ const MenuSection = ({
             items.length > 0 ? (
               <TabsContent key={subcategory} value={subcategory} className="mt-0">
                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                  {items.map((item) => (
-                    <MenuItem 
-                      key={item.id} 
-                      menuItem={item} 
-                      isAdmin={isAdmin}
-                      onEdit={onEdit}
-                      onDelete={onDelete}
-                    />
-                  ))}
+                  {items.map((item) => renderMenuItem(item))}
                 </div>
               </TabsContent>
             ) : null

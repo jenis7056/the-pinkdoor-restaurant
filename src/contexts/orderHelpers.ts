@@ -66,4 +66,22 @@ export const handleUpdateOrderStatus = (
   };
   
   toast.success(statusMessages[status] || `Order status updated to ${status}`);
+  
+  // Auto-complete orders after they've been served for a while (60 seconds)
+  if (status === 'served') {
+    setTimeout(() => {
+      setOrders(prev => 
+        prev.map(order => 
+          order.id === orderId 
+            ? { 
+                ...order, 
+                status: 'completed', 
+                updatedAt: new Date().toISOString() 
+              } 
+            : order
+        )
+      );
+      toast.success('Your order has been completed');
+    }, 60000); // 60 seconds
+  }
 };
