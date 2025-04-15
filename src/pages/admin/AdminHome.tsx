@@ -1,25 +1,18 @@
-
 import { useNavigate } from "react-router-dom";
 import Layout from "@/components/Layout";
 import { useApp } from "@/contexts/AppContext";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { 
-  UtensilsCrossed, 
-  Users, 
-  ShoppingBag, 
-  Clock,
-  Check,
-  ChefHat
-} from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import OrderCard from "@/components/OrderCard";
 import { OrderStatus } from "@/types";
+import { useOrdersSync } from "@/hooks/useOrdersSync";
 import { Separator } from "@/components/ui/separator";
 
 const AdminHome = () => {
   const navigate = useNavigate();
-  const { menuItems, customers, orders, currentUser, updateOrderStatus } = useApp();
+  const { menuItems, customers, currentUser, updateOrderStatus } = useApp();
+  const orders = useOrdersSync(); // Using the real-time sync hook
   
   // Redirect if not logged in as admin
   if (!currentUser || currentUser.role !== "admin") {

@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import Layout from "@/components/Layout";
@@ -9,13 +8,15 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import { Search, ShoppingBag } from "lucide-react";
 import { OrderStatus } from "@/types";
+import { useOrdersSync } from "@/hooks/useOrdersSync";
 
 const WaiterHome = () => {
   const [activeTab, setActiveTab] = useState<"pending" | "ready" | "all">("pending");
   const [searchQuery, setSearchQuery] = useState("");
   const navigate = useNavigate();
-  const { orders, updateOrderStatus, currentUser } = useApp();
-  
+  const { updateOrderStatus, currentUser } = useApp();
+  const orders = useOrdersSync(); // Using the real-time sync hook
+
   // Redirect if not logged in as waiter
   useEffect(() => {
     if (!currentUser || currentUser.role !== "waiter") {

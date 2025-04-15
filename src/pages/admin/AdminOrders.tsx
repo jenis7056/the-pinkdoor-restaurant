@@ -9,12 +9,14 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import { ArrowLeft, Search, ShoppingBag } from "lucide-react";
 import { OrderStatus } from "@/types";
+import { useOrdersSync } from "@/hooks/useOrdersSync";
 
 const AdminOrders = () => {
   const [activeTab, setActiveTab] = useState<OrderStatus | "all" | "active">("active");
   const [searchQuery, setSearchQuery] = useState("");
   const navigate = useNavigate();
-  const { orders, updateOrderStatus, currentUser } = useApp();
+  const { updateOrderStatus, currentUser } = useApp();
+  const orders = useOrdersSync(); // Using the real-time sync hook
   
   // Redirect if not logged in as admin
   if (!currentUser || currentUser.role !== "admin") {
