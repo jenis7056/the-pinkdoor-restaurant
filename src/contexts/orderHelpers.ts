@@ -118,4 +118,3 @@ export const handleUpdateOrderStatus = (
     toast.success('Thank you for dining with us!');
   }
 };
-

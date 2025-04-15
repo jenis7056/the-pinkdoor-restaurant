@@ -1,3 +1,4 @@
+
 export const loadStateFromLocalStorage = (
   setCurrentUser: React.Dispatch<React.SetStateAction<any>>,
   setCurrentCustomer: React.Dispatch<React.SetStateAction<any>>,
@@ -47,5 +48,21 @@ export const saveToLocalStorage = (key: string, value: any) => {
     }
   } catch (error) {
     console.error('Error saving to localStorage:', error);
+  }
+};
+
+// Function to force update localStorage even if value hasn't changed
+// This will trigger storage events in other tabs
+export const forceSyncToLocalStorage = (key: string, value: any) => {
+  try {
+    // Add a timestamp to force the value to be different
+    const valueWithTimestamp = {
+      data: value,
+      _timestamp: new Date().getTime()
+    };
+    localStorage.setItem(key, JSON.stringify(valueWithTimestamp));
+    console.log(`Force synced to localStorage: ${key}`);
+  } catch (error) {
+    console.error('Error force syncing to localStorage:', error);
   }
 };

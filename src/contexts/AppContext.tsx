@@ -11,7 +11,7 @@ import { handleAddMenuItem, handleUpdateMenuItem, handleDeleteMenuItem } from ".
 import { handleRegisterCustomer, handleRemoveCustomer } from "./customerHelpers";
 import { handleCreateOrder, handleUpdateOrderStatus } from "./orderHelpers";
 import { handleAddToCart, handleUpdateCartItem, handleRemoveFromCart, handleClearCart } from "./cartHelpers";
-import { loadStateFromLocalStorage, saveToLocalStorage } from "./localStorageHelpers";
+import { loadStateFromLocalStorage, saveToLocalStorage, forceSyncToLocalStorage } from "./localStorageHelpers";
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
@@ -52,19 +52,50 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       switch (event.key) {
         case 'orders':
           if (event.newValue) {
-            const newOrders = JSON.parse(event.newValue);
-            console.log("Updating orders from storage event:", newOrders);
-            setOrders(newOrders);
+            try {
+              // Check if the value uses the timestamp format
+              const parsed = JSON.parse(event.newValue);
+              if (parsed._timestamp) {
+                // This is the new format with timestamp
+                console.log("Updating orders from storage event (with timestamp):", parsed.data);
+                setOrders(parsed.data);
+              } else {
+                // Regular format
+                console.log("Updating orders from storage event:", parsed);
+                setOrders(parsed);
+              }
+            } catch (error) {
+              console.error("Error parsing orders from storage event:", error);
+            }
           }
           break;
         case 'customers':
           if (event.newValue) {
-            setCustomers(JSON.parse(event.newValue));
+            try {
+              const parsed = JSON.parse(event.newValue);
+              if (parsed._timestamp) {
+                setCustomers(parsed.data);
+              } else {
+                setCustomers(parsed);
+              }
+            } catch (error) {
+              console.error("Error parsing customers from storage event:", error);
+            }
           }
           break;
         case 'currentCustomer':
           if (event.newValue) {
-            setCurrentCustomer(JSON.parse(event.newValue));
+            try {
+              const parsed = JSON.parse(event.newValue);
+              if (parsed._timestamp) {
+                setCurrentCustomer(parsed.data);
+              } else {
+                setCurrentCustomer(parsed);
+              }
+            } catch (error) {
+              console.error("Error parsing currentCustomer from storage event:", error);
+              setCurrentCustomer(null);
+            }
           } else {
             setCurrentCustomer(null);
           }
@@ -90,7 +121,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   }, [customers]);
 
   useEffect(() => {
-    saveToLocalStorage('orders', orders);
+    // For orders, we use forceSyncToLocalStorage to ensure it triggers
+    // the storage event even if the stringified value is the same
+    // This is important for real-time updates in the waiter portal
+    forceSyncToLocalStorage('orders', orders);
     console.log("Updated orders:", orders);
   }, [orders]);
 
