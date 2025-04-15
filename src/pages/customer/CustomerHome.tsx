@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Layout from "@/components/Layout";
@@ -6,12 +5,12 @@ import MenuSection from "@/components/MenuSection";
 import { useApp } from "@/contexts/AppContext";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ChevronRight, ShoppingCart } from "lucide-react";
+import { ChevronRight, ShoppingCart, ClipboardList } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 
 const CustomerHome = () => {
   const navigate = useNavigate();
-  const { menuItems, categories, currentCustomer, cart } = useApp();
+  const { menuItems, categories, currentCustomer, cart, orders } = useApp();
   const [selectedCategory, setSelectedCategory] = useState<string>(categories[0]?.name || "");
 
   // Redirect if not logged in as customer
@@ -21,6 +20,13 @@ const CustomerHome = () => {
   }
 
   const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
+  
+  // Check if there are any active orders
+  const hasActiveOrders = orders.some(
+    order => 
+      order.customerId === currentCustomer.id && 
+      order.status !== "completed"
+  );
 
   // Filter menu items by selected category
   const filteredItems = selectedCategory
@@ -111,6 +117,18 @@ const CustomerHome = () => {
             category={selectedCategory}
             subcategories={subcategories}
           />
+        )}
+
+        {hasActiveOrders && (
+          <div className="fixed bottom-6 left-6 md:bottom-8 md:left-8">
+            <Button
+              onClick={() => navigate("/customer/orders")}
+              className="bg-pink-700 hover:bg-pink-800 rounded-full h-14 w-14 p-0 shadow-lg flex items-center justify-center"
+              size="icon"
+            >
+              <ClipboardList className="h-6 w-6" />
+            </Button>
+          </div>
         )}
 
         <div className="fixed bottom-6 right-6 md:hidden">
