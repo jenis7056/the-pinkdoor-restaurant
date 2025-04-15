@@ -27,12 +27,12 @@ export const loadStateFromLocalStorage = (
       try {
         // Check if the value uses the timestamp format
         const parsed = JSON.parse(orders);
-        if (parsed._timestamp) {
+        if (parsed && parsed._timestamp) {
           // If it has timestamp format, use the data property
-          setOrders(parsed.data || []);
+          setOrders(Array.isArray(parsed.data) ? parsed.data : []);
         } else {
           // Regular format
-          setOrders(parsed);
+          setOrders(Array.isArray(parsed) ? parsed : []);
         }
       } catch (error) {
         console.error('Error parsing orders from localStorage:', error);
@@ -72,7 +72,7 @@ export const forceSyncToLocalStorage = (key: string, value: any) => {
   try {
     // Add a timestamp to force the value to be different
     const valueWithTimestamp = {
-      data: value || [], // Ensure value is at least an empty array
+      data: Array.isArray(value) ? value : [], // Ensure value is at least an empty array
       _timestamp: new Date().getTime()
     };
     localStorage.setItem(key, JSON.stringify(valueWithTimestamp));

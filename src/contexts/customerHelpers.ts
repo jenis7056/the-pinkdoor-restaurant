@@ -18,8 +18,11 @@ export const handleRegisterCustomer = (
   // Check if table is already occupied by another customer
   const isTableOccupied = customers.some(customer => customer.tableNumber === tableNumber);
   
+  // Ensure orders is an array before calling .some() on it
+  const ordersArray = Array.isArray(orders) ? orders : [];
+  
   // Check if table has any incomplete orders
-  const hasIncompleteOrders = orders.some(
+  const hasIncompleteOrders = ordersArray.some(
     order => order.tableNumber === tableNumber && order.status !== 'completed'
   );
   
