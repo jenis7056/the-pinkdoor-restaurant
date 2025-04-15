@@ -161,6 +161,7 @@ const Index = () => {
               Choose your role above to access the appropriate portal.
             </p>
             
+            {/* Only show continue as customer if currentCustomer exists */}
             {currentCustomer && (
               <Button 
                 className="bg-pink-700 hover:bg-pink-800"

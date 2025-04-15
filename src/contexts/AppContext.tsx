@@ -71,12 +71,12 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   const logout = () => {
+    clearEntireLocalStorage();
     handleLogout(setCurrentUser);
     setCurrentCustomer(null);
     setCustomers([]);
     setOrders([]);
     setCart([]);
-    clearEntireLocalStorage();
   };
 
   // Menu management functions
