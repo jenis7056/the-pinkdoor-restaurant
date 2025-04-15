@@ -1,4 +1,3 @@
-
 import { Order, OrderItem, OrderStatus } from "@/types";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -12,9 +11,11 @@ import {
   ChefHat, 
   BellRing, 
   Coffee,
-  Receipt
+  Receipt,
+  X
 } from "lucide-react";
 import { useState } from "react";
+import { useApp } from "@/contexts/AppContext";
 
 interface OrderCardProps {
   order: Order;
@@ -23,6 +24,7 @@ interface OrderCardProps {
 }
 
 const OrderCard = ({ order, userRole, updateStatus }: OrderCardProps) => {
+  const { orders, setOrders } = useApp();
   const [showDetails, setShowDetails] = useState(false);
 
   const statusIcons = {
@@ -62,11 +64,9 @@ const OrderCard = ({ order, userRole, updateStatus }: OrderCardProps) => {
 
     switch (role) {
       case "waiter":
-        // Waiters can confirm pending orders and mark ready orders as served
         return (status === "pending" && nextStatus === "confirmed") || 
                (status === "ready" && nextStatus === "served");
       case "chef":
-        // Chefs can mark confirmed orders as preparing and preparing orders as ready
         return (status === "confirmed" && nextStatus === "preparing") || 
                (status === "preparing" && nextStatus === "ready");
       default:
@@ -96,6 +96,13 @@ const OrderCard = ({ order, userRole, updateStatus }: OrderCardProps) => {
     currency: "INR",
     minimumFractionDigits: 0,
   }).format(order.totalAmount);
+
+  const handleCancel = () => {
+    if (window.confirm('Are you sure you want to cancel this order?')) {
+      setOrders(prev => prev.filter(o => o.id !== order.id));
+      toast.success('Order cancelled successfully');
+    }
+  };
 
   return (
     <Card className="w-full border-pink-100">
@@ -161,16 +168,27 @@ const OrderCard = ({ order, userRole, updateStatus }: OrderCardProps) => {
         )}
       </CardContent>
 
-      {(updateStatus || order.status === "completed") && (
+      {(updateStatus || order.status === "completed" || order.canCancel) && (
         <CardFooter className="flex justify-between pt-0">
           {renderStatusButton()}
+          
+          {order.canCancel && userRole === "customer" && order.status === "pending" && (
+            <Button 
+              variant="destructive" 
+              size="sm"
+              onClick={handleCancel}
+              className="bg-red-600 hover:bg-red-700"
+            >
+              <X className="h-4 w-4 mr-2" />
+              Cancel Order
+            </Button>
+          )}
           
           {order.status === "completed" && (
             <Button 
               variant="outline" 
               className="ml-auto border-pink-200 text-pink-700"
               onClick={() => {
-                // Generate and display bill functionality would go here
                 window.print();
               }}
             >

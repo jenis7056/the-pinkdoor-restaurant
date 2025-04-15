@@ -1,4 +1,3 @@
-
 import { Customer, OrderItem, Order, OrderStatus } from "@/types";
 import { toast } from "sonner";
 
@@ -28,14 +27,34 @@ export const handleCreateOrder = (
     totalAmount,
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
+    canCancel: true,
   };
   
   console.log("Creating new order:", newOrder);
   setOrders(prev => [...prev, newOrder]);
-  setCart([]);  // Clear the cart after ordering
+  setCart([]); // Clear the cart after ordering
   toast.success('Your order has been placed successfully!');
   
+  // Set a timeout to remove cancel ability after 2 minutes
+  setTimeout(() => {
+    setOrders(prev => 
+      prev.map(order => 
+        order.id === newOrder.id 
+          ? { ...order, canCancel: false }
+          : order
+      )
+    );
+  }, 120000); // 2 minutes
+  
   return newOrder;
+};
+
+export const handleCancelOrder = (
+  orderId: string,
+  setOrders: React.Dispatch<React.SetStateAction<Order[]>>
+) => {
+  setOrders(prev => prev.filter(order => order.id !== orderId));
+  toast.success('Order cancelled successfully');
 };
 
 export const handleUpdateOrderStatus = (

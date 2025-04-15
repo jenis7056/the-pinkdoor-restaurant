@@ -1,4 +1,3 @@
-
 export type UserRole = 'admin' | 'customer' | 'waiter' | 'chef';
 
 export interface User {
@@ -45,6 +44,7 @@ export interface Order {
   totalAmount: number;
   createdAt: string;
   updatedAt: string;
+  canCancel?: boolean;
 }
 
 export interface Category {
