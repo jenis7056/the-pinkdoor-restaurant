@@ -22,6 +22,7 @@ export interface AppContextType {
   
   // Order Management
   orders: Order[];
+  setOrders: React.Dispatch<React.SetStateAction<Order[]>>;
   createOrder: (items: OrderItem[]) => void;
   updateOrderStatus: (orderId: string, status: OrderStatus) => void;
   
