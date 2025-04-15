@@ -1,21 +1,132 @@
 
-@media print {
-  body * {
-    visibility: hidden;
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=Poppins:wght@300;400;500;600&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 327 73% 97%;
+    --foreground: 327 10% 10%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 327 10% 10%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 327 10% 10%;
+
+    --primary: 327 73% 50%;
+    --primary-foreground: 327 10% 98%;
+
+    --secondary: 327 15% 94%;
+    --secondary-foreground: 327 50% 20%;
+
+    --muted: 327 10% 94%;
+    --muted-foreground: 327 5% 45%;
+
+    --accent: 45 80% 60%;
+    --accent-foreground: 327 10% 10%;
+
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 40% 98%;
+
+    --border: 327 20% 87%;
+    --input: 327 20% 87%;
+    --ring: 327 73% 50%;
+
+    --radius: 0.5rem;
+
+    --sidebar-background: 327 73% 97%;
+    --sidebar-foreground: 327 10% 10%;
+    --sidebar-primary: 327 73% 50%;
+    --sidebar-primary-foreground: 327 10% 98%;
+    --sidebar-accent: 327 15% 94%;
+    --sidebar-accent-foreground: 327 50% 20%;
+    --sidebar-border: 327 20% 87%;
+    --sidebar-ring: 327 73% 50%;
   }
-  
-  .ui-dialog,
-  .ui-dialog * {
-    visibility: visible;
+
+  .dark {
+    --background: 327 30% 10%;
+    --foreground: 327 5% 95%;
+
+    --card: 327 30% 12%;
+    --card-foreground: 327 5% 95%;
+
+    --popover: 327 30% 12%;
+    --popover-foreground: 327 5% 95%;
+
+    --primary: 327 73% 50%;
+    --primary-foreground: 327 5% 95%;
+
+    --secondary: 327 20% 20%;
+    --secondary-foreground: 327 5% 95%;
+
+    --muted: 327 20% 20%;
+    --muted-foreground: 327 5% 65%;
+
+    --accent: 45 80% 60%;
+    --accent-foreground: 327 30% 10%;
+
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 327 5% 95%;
+
+    --border: 327 20% 25%;
+    --input: 327 20% 25%;
+    --ring: 327 73% 50%;
+
+    --sidebar-background: 327 30% 12%;
+    --sidebar-foreground: 327 5% 95%;
+    --sidebar-primary: 327 73% 50%;
+    --sidebar-primary-foreground: 327 5% 95%;
+    --sidebar-accent: 327 20% 20%;
+    --sidebar-accent-foreground: 327 5% 95%;
+    --sidebar-border: 327 20% 25%;
+    --sidebar-ring: 327 73% 50%;
   }
-  
-  .ui-dialog {
-    position: absolute;
-    left: 0;
-    top: 0;
+}
+
+@layer base {
+  * {
+    @apply border-border;
   }
-  
-  button {
-    display: none !important;
+
+  body {
+    @apply bg-background text-foreground;
+    font-family: 'Poppins', sans-serif;
   }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'Playfair Display', serif;
+  }
+}
+
+.menu-item-transition {
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.menu-item-transition:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+}
+
+.order-status-badge {
+  transition: all 0.3s ease;
+}
+
+.status-pending {
+  @apply bg-yellow-100 text-yellow-800 border-yellow-300;
+}
+
+.status-preparing {
+  @apply bg-blue-100 text-blue-800 border-blue-300;
+}
+
+.status-ready {
+  @apply bg-green-100 text-green-800 border-green-300;
+}
+
+.status-completed {
+  @apply bg-purple-100 text-purple-800 border-purple-300;
 }
