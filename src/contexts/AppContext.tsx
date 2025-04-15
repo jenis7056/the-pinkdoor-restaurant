@@ -73,12 +73,17 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   const logout = () => {
-    clearEntireLocalStorage();
-    handleLogout(setCurrentUser);
+    // First clear all state variables
+    setCurrentUser(null);
     setCurrentCustomer(null);
     setCustomers([]);
     setOrders([]);
     setCart([]);
+    
+    // Then clear localStorage to prevent any persistence
+    clearEntireLocalStorage();
+    
+    console.log("Logout complete - all state and localStorage cleared");
   };
 
   // Menu management functions

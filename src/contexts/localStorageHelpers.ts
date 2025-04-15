@@ -35,6 +35,8 @@ export const loadStateFromLocalStorage = (
     }
   } catch (error) {
     console.error('Error loading data from localStorage:', error);
+    // If there's an error, clear everything to prevent corrupted state
+    clearEntireLocalStorage();
   }
 };
 

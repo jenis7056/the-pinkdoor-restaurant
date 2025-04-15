@@ -1,4 +1,3 @@
-
 import { useNavigate } from "react-router-dom";
 import Layout from "@/components/Layout";
 import { Button } from "@/components/ui/button";
@@ -161,25 +160,6 @@ const Index = () => {
               The PinkDoor Restaurant offers a seamless digital experience for all users.
               Choose your role above to access the appropriate portal.
             </p>
-            
-            {/* Customer continue section - show only if currentCustomer exists */}
-            {currentCustomer && (
-              <div className="mt-6 p-5 bg-pink-50 rounded-lg shadow-sm max-w-md mx-auto">
-                <h4 className="text-lg font-medium text-pink-800 mb-2">
-                  Welcome back, {currentCustomer.name}!
-                </h4>
-                <p className="text-sm text-gray-600 mb-3">
-                  Continue your dining experience at Table #{currentCustomer.tableNumber}
-                </p>
-                <Button 
-                  className="bg-pink-700 hover:bg-pink-800"
-                  onClick={() => navigate("/customer")}
-                >
-                  Continue to Menu
-                  <ArrowRight className="ml-2 h-4 w-4" />
-                </Button>
-              </div>
-            )}
           </div>
         </div>
       </section>
