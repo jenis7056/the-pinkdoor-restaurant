@@ -38,6 +38,7 @@ const CustomerRegistration = () => {
     setIsLoading(true);
     
     try {
+      // Fix: Call registerCustomer with correct number of arguments
       registerCustomer(name, tableNum);
       
       setTimeout(() => {
@@ -121,3 +122,4 @@ const CustomerRegistration = () => {
 };
 
 export default CustomerRegistration;
+
