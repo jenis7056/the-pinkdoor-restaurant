@@ -1,4 +1,3 @@
-
 import { useNavigate } from "react-router-dom";
 import Layout from "@/components/Layout";
 import { useApp } from "@/contexts/AppContext";
@@ -12,7 +11,6 @@ const CustomerCart = () => {
   const navigate = useNavigate();
   const { cart, updateCartItem, removeFromCart, clearCart, createOrder, currentCustomer } = useApp();
 
-  // Redirect if not logged in as customer
   if (!currentCustomer) {
     navigate("/customer-registration");
     return null;
@@ -26,11 +24,27 @@ const CustomerCart = () => {
     }
   };
 
-  const calculateTotal = () => {
+  const calculateSubtotal = () => {
     return cart.reduce(
       (sum, item) => sum + (item.menuItem.price * item.quantity), 
       0
     );
+  };
+
+  const calculateTaxes = (subtotal: number) => {
+    const sgstRate = 0.025; // 2.50%
+    const cgstRate = 0.025; // 2.50%
+    
+    return {
+      sgst: subtotal * sgstRate,
+      cgst: subtotal * cgstRate
+    };
+  };
+
+  const calculateTotal = () => {
+    const subtotal = calculateSubtotal();
+    const { sgst, cgst } = calculateTaxes(subtotal);
+    return subtotal + sgst + cgst;
   };
 
   const handlePlaceOrder = () => {
@@ -43,11 +57,17 @@ const CustomerCart = () => {
     navigate("/customer/orders");
   };
 
-  const formattedTotal = new Intl.NumberFormat("en-IN", {
-    style: "currency",
-    currency: "INR",
-    minimumFractionDigits: 0,
-  }).format(calculateTotal());
+  const subtotal = calculateSubtotal();
+  const { sgst, cgst } = calculateTaxes(subtotal);
+  const total = calculateTotal();
+
+  const formatCurrency = (amount: number) => {
+    return new Intl.NumberFormat("en-IN", {
+      style: "currency",
+      currency: "INR",
+      minimumFractionDigits: 0,
+    }).format(amount);
+  };
 
   return (
     <Layout>
@@ -139,8 +159,16 @@ const CustomerCart = () => {
                 
                 <div className="space-y-3">
                   <div className="flex justify-between text-gray-600">
-                    <span>Items Total</span>
-                    <span>{formattedTotal}</span>
+                    <span>Subtotal</span>
+                    <span>{formatCurrency(subtotal)}</span>
+                  </div>
+                  <div className="flex justify-between text-gray-600">
+                    <span>SGST @2.50%</span>
+                    <span>{formatCurrency(sgst)}</span>
+                  </div>
+                  <div className="flex justify-between text-gray-600">
+                    <span>CGST @2.50%</span>
+                    <span>{formatCurrency(cgst)}</span>
                   </div>
                   <div className="flex justify-between text-gray-600">
                     <span>Table Number</span>
@@ -149,7 +177,7 @@ const CustomerCart = () => {
                   <Separator className="my-3" />
                   <div className="flex justify-between font-medium text-lg">
                     <span>Order Total</span>
-                    <span className="text-pink-900">{formattedTotal}</span>
+                    <span className="text-pink-900">{formatCurrency(total)}</span>
                   </div>
                 </div>
               </div>
