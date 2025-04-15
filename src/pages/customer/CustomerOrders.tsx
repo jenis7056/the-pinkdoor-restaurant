@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import Layout from "@/components/Layout";
 import OrderCard from "@/components/OrderCard";
@@ -14,14 +14,23 @@ const CustomerOrders = () => {
   const navigate = useNavigate();
   const { orders, currentCustomer } = useApp();
   
-  // Redirect if not logged in as customer
+  // Use useEffect for navigation instead of direct navigation
+  useEffect(() => {
+    if (!currentCustomer) {
+      navigate("/customer-registration");
+    }
+  }, [currentCustomer, navigate]);
+
+  // If customer is not logged in, render nothing while redirect happens
   if (!currentCustomer) {
-    navigate("/customer-registration");
     return null;
   }
 
+  // Ensure orders is an array before filtering
+  const orderArray = Array.isArray(orders) ? orders : [];
+
   // Filter orders for the current customer
-  const customerOrders = orders.filter(
+  const customerOrders = orderArray.filter(
     order => order.customerId === currentCustomer.id
   );
 
