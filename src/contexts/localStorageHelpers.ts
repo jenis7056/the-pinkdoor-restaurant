@@ -49,3 +49,16 @@ export const saveToLocalStorage = (key: string, value: any) => {
     console.error(`Error saving ${key} to localStorage:`, error);
   }
 };
+
+export const clearEntireLocalStorage = () => {
+  try {
+    localStorage.removeItem('currentUser');
+    localStorage.removeItem('currentCustomer');
+    localStorage.removeItem('customers');
+    localStorage.removeItem('orders');
+    localStorage.removeItem('cart');
+    console.log('Entire session cleared from localStorage');
+  } catch (error) {
+    console.error('Error clearing localStorage:', error);
+  }
+};

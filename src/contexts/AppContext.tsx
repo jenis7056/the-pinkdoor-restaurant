@@ -10,7 +10,7 @@ import { handleAddMenuItem, handleUpdateMenuItem, handleDeleteMenuItem } from ".
 import { handleRegisterCustomer, handleRemoveCustomer } from "./customerHelpers";
 import { handleCreateOrder, handleUpdateOrderStatus } from "./orderHelpers";
 import { handleAddToCart, handleUpdateCartItem, handleRemoveFromCart, handleClearCart } from "./cartHelpers";
-import { loadStateFromLocalStorage, saveToLocalStorage } from "./localStorageHelpers";
+import { loadStateFromLocalStorage, saveToLocalStorage, clearEntireLocalStorage } from "./localStorageHelpers";
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
@@ -72,6 +72,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const logout = () => {
     handleLogout(setCurrentUser);
+    setCurrentCustomer(null);
+    setCustomers([]);
+    setOrders([]);
+    setCart([]);
+    clearEntireLocalStorage();
   };
 
   // Menu management functions
