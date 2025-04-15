@@ -35,8 +35,6 @@ export const loadStateFromLocalStorage = (
     }
   } catch (error) {
     console.error('Error loading data from localStorage:', error);
-    // If there's an error, clear everything to prevent corrupted state
-    clearEntireLocalStorage();
   }
 };
 
@@ -54,13 +52,11 @@ export const saveToLocalStorage = (key: string, value: any) => {
 
 export const clearEntireLocalStorage = () => {
   try {
-    // Clear all specific items we've stored
     localStorage.removeItem('currentUser');
     localStorage.removeItem('currentCustomer');
     localStorage.removeItem('customers');
     localStorage.removeItem('orders');
     localStorage.removeItem('cart');
-    
     console.log('Entire session cleared from localStorage');
   } catch (error) {
     console.error('Error clearing localStorage:', error);
