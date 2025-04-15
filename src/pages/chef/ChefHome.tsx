@@ -9,14 +9,12 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import { Search, ShoppingBag } from "lucide-react";
 import { OrderStatus } from "@/types";
-import { useOrdersSync } from "@/hooks/useOrdersSync";
 
 const ChefHome = () => {
   const [activeTab, setActiveTab] = useState<"confirmed" | "preparing" | "all">("confirmed");
   const [searchQuery, setSearchQuery] = useState("");
   const navigate = useNavigate();
-  const { updateOrderStatus, currentUser } = useApp();
-  const orders = useOrdersSync(); // Using the real-time sync hook
+  const { orders, updateOrderStatus, currentUser } = useApp();
   
   // Redirect if not logged in as chef
   if (!currentUser || currentUser.role !== "chef") {

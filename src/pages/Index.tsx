@@ -160,16 +160,6 @@ const Index = () => {
               The PinkDoor Restaurant offers a seamless digital experience for all users.
               Choose your role above to access the appropriate portal.
             </p>
-            
-            {currentCustomer && (
-              <Button 
-                className="bg-pink-700 hover:bg-pink-800"
-                onClick={() => navigate("/customer")}
-              >
-                Continue as {currentCustomer.name}
-                <ArrowRight className="ml-2 h-4 w-4" />
-              </Button>
-            )}
           </div>
         </div>
       </section>

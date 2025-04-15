@@ -15,13 +15,11 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import OrderCard from "@/components/OrderCard";
 import { OrderStatus } from "@/types";
-import { useOrdersSync } from "@/hooks/useOrdersSync";
 import { Separator } from "@/components/ui/separator";
 
 const AdminHome = () => {
   const navigate = useNavigate();
-  const { menuItems, customers, currentUser, updateOrderStatus } = useApp();
-  const orders = useOrdersSync(); // Using the real-time sync hook
+  const { menuItems, customers, orders, currentUser, updateOrderStatus } = useApp();
   
   // Redirect if not logged in as admin
   if (!currentUser || currentUser.role !== "admin") {

@@ -1,3 +1,4 @@
+
 import { Customer } from "@/types";
 import { toast } from "sonner";
 
@@ -5,27 +6,11 @@ export const handleRegisterCustomer = (
   name: string,
   tableNumber: number,
   setCustomers: React.Dispatch<React.SetStateAction<Customer[]>>,
-  setCurrentCustomer: React.Dispatch<React.SetStateAction<Customer | null>>,
-  customers: Customer[],
-  orders: any[]
+  setCurrentCustomer: React.Dispatch<React.SetStateAction<Customer | null>>
 ) => {
   // Validate table number is within allowed range
   if (tableNumber < 1 || tableNumber > 15) {
     throw new Error("Table number must be between 1 and 15");
-  }
-  
-  // Check if table is already occupied
-  const isTableOccupied = customers.some(customer => customer.tableNumber === tableNumber);
-  
-  // Check if table has any incomplete orders
-  const hasIncompleteOrders = orders.some(
-    order => 
-      order.tableNumber === tableNumber && 
-      order.status !== 'completed'
-  );
-  
-  if (isTableOccupied || hasIncompleteOrders) {
-    throw new Error("This table is currently occupied. Please choose another table.");
   }
   
   const newCustomer = {

@@ -14,7 +14,7 @@ const CustomerRegistration = () => {
   const [tableNumber, setTableNumber] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
-  const { registerCustomer, customers, orders } = useApp();
+  const { registerCustomer } = useApp();
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -38,7 +38,7 @@ const CustomerRegistration = () => {
     setIsLoading(true);
     
     try {
-      registerCustomer(name, tableNum, customers, orders);
+      registerCustomer(name, tableNum);
       
       setTimeout(() => {
         navigate("/customer");
