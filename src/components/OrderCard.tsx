@@ -1,9 +1,11 @@
+
 import { Order, OrderItem, OrderStatus } from "@/types";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { UserRole } from "@/types";
+import { toast } from "sonner";
 import { 
   Clock, 
   CheckCircle2, 
@@ -16,6 +18,7 @@ import {
 } from "lucide-react";
 import { useState } from "react";
 import { useApp } from "@/contexts/AppContext";
+import { handleCancelOrder } from "@/contexts/orderHelpers";
 
 interface OrderCardProps {
   order: Order;
@@ -99,8 +102,7 @@ const OrderCard = ({ order, userRole, updateStatus }: OrderCardProps) => {
 
   const handleCancel = () => {
     if (window.confirm('Are you sure you want to cancel this order?')) {
-      setOrders(prev => prev.filter(o => o.id !== order.id));
-      toast.success('Order cancelled successfully');
+      handleCancelOrder(order.id, setOrders);
     }
   };
 
