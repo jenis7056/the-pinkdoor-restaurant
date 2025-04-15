@@ -89,7 +89,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   // Customer management functions
   const registerCustomer = (name: string, tableNumber: number) => {
-    handleRegisterCustomer(name, tableNumber, setCustomers, setCurrentCustomer);
+    handleRegisterCustomer(name, tableNumber, setCustomers, setCurrentCustomer, customers, orders);
   };
 
   const removeCustomer = (id: string) => {
