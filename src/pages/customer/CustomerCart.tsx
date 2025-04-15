@@ -6,6 +6,7 @@ import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/componen
 import { Separator } from "@/components/ui/separator";
 import { toast } from "sonner";
 import { Trash2, X, ShoppingBag, ArrowLeft, Plus, Minus } from "lucide-react";
+import BillReceiptDialog from "@/components/BillReceiptDialog";
 
 const CustomerCart = () => {
   const navigate = useNavigate();
@@ -183,13 +184,21 @@ const CustomerCart = () => {
               </div>
               
               <div className="bg-gray-50 p-4 md:p-6 rounded-b-lg border-t border-pink-100">
-                <Button 
-                  className="w-full bg-pink-700 hover:bg-pink-800"
-                  onClick={handlePlaceOrder}
-                >
-                  <ShoppingBag className="mr-2 h-5 w-5" />
-                  Place Order
-                </Button>
+                <div className="flex gap-4 justify-between">
+                  <Button 
+                    className="flex-1 bg-pink-700 hover:bg-pink-800"
+                    onClick={handlePlaceOrder}
+                  >
+                    <ShoppingBag className="mr-2 h-5 w-5" />
+                    Place Order
+                  </Button>
+                  <BillReceiptDialog
+                    items={cart}
+                    tableNumber={currentCustomer?.tableNumber || 0}
+                    customerName={currentCustomer?.name || ""}
+                    orderId={crypto.randomUUID()}
+                  />
+                </div>
               </div>
             </div>
           </>
