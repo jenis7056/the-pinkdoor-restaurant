@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { User, Customer, MenuItem, Order, OrderItem, Category, UserRole, OrderStatus } from "@/types";
 import { menuData } from "@/data/menuItems";
@@ -50,6 +51,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   useEffect(() => {
     saveToLocalStorage('currentCustomer', currentCustomer);
+    console.log("Current customer updated:", currentCustomer);
   }, [currentCustomer]);
 
   useEffect(() => {
