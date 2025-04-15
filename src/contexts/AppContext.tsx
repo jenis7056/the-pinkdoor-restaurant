@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { User, Customer, MenuItem, Order, OrderItem, Category, UserRole, OrderStatus } from "@/types";
 import { menuData } from "@/data/menuItems";
@@ -41,6 +42,38 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       setOrders,
       setCart
     );
+
+    // Add storage event listener for cross-tab communication
+    const handleStorageChange = (event: StorageEvent) => {
+      if (!event.key) return;
+
+      console.log("Storage change detected:", event.key);
+      
+      switch (event.key) {
+        case 'orders':
+          if (event.newValue) {
+            const newOrders = JSON.parse(event.newValue);
+            console.log("Updating orders from storage event:", newOrders);
+            setOrders(newOrders);
+          }
+          break;
+        case 'customers':
+          if (event.newValue) {
+            setCustomers(JSON.parse(event.newValue));
+          }
+          break;
+        case 'currentCustomer':
+          if (event.newValue) {
+            setCurrentCustomer(JSON.parse(event.newValue));
+          } else {
+            setCurrentCustomer(null);
+          }
+          break;
+      }
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+    return () => window.removeEventListener('storage', handleStorageChange);
   }, []);
 
   // Save state to localStorage when it changes

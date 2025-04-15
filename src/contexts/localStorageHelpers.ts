@@ -1,51 +1,51 @@
-
-import { User, Customer, MenuItem, Order, OrderItem, Category } from "@/types";
-
 export const loadStateFromLocalStorage = (
-  setCurrentUser: React.Dispatch<React.SetStateAction<User | null>>,
-  setCurrentCustomer: React.Dispatch<React.SetStateAction<Customer | null>>,
-  setCustomers: React.Dispatch<React.SetStateAction<Customer[]>>,
-  setOrders: React.Dispatch<React.SetStateAction<Order[]>>,
-  setCart: React.Dispatch<React.SetStateAction<OrderItem[]>>
+  setCurrentUser: React.Dispatch<React.SetStateAction<any>>,
+  setCurrentCustomer: React.Dispatch<React.SetStateAction<any>>,
+  setCustomers: React.Dispatch<React.SetStateAction<any>>,
+  setOrders: React.Dispatch<React.SetStateAction<any>>,
+  setCart: React.Dispatch<React.SetStateAction<any>>
 ) => {
   try {
-    const storedUser = localStorage.getItem('currentUser');
-    if (storedUser) {
-      setCurrentUser(JSON.parse(storedUser));
+    const currentUser = localStorage.getItem('currentUser');
+    if (currentUser) {
+      setCurrentUser(JSON.parse(currentUser));
     }
 
-    const storedCustomer = localStorage.getItem('currentCustomer');
-    if (storedCustomer) {
-      setCurrentCustomer(JSON.parse(storedCustomer));
+    const currentCustomer = localStorage.getItem('currentCustomer');
+    if (currentCustomer) {
+      setCurrentCustomer(JSON.parse(currentCustomer));
     }
 
-    const storedCustomers = localStorage.getItem('customers');
-    if (storedCustomers) {
-      setCustomers(JSON.parse(storedCustomers));
+    const customers = localStorage.getItem('customers');
+    if (customers) {
+      setCustomers(JSON.parse(customers));
     }
 
-    const storedOrders = localStorage.getItem('orders');
-    if (storedOrders) {
-      setOrders(JSON.parse(storedOrders));
+    const orders = localStorage.getItem('orders');
+    if (orders) {
+      setOrders(JSON.parse(orders));
     }
 
-    const storedCart = localStorage.getItem('cart');
-    if (storedCart) {
-      setCart(JSON.parse(storedCart));
-    }
+    const cart = localStorage.getItem('cart');
+      if (cart) {
+        setCart(JSON.parse(cart));
+      }
   } catch (error) {
-    console.error('Error loading data from localStorage:', error);
+    console.error('Error loading state from localStorage:', error);
   }
 };
 
 export const saveToLocalStorage = (key: string, value: any) => {
   try {
-    if (value) {
-      localStorage.setItem(key, JSON.stringify(value));
-    } else {
-      localStorage.removeItem(key);
+    // Only save if value is different from current storage
+    const currentValue = localStorage.getItem(key);
+    const newValue = JSON.stringify(value);
+    
+    if (currentValue !== newValue) {
+      localStorage.setItem(key, newValue);
+      console.log(`Saved to localStorage: ${key}`);
     }
   } catch (error) {
-    console.error(`Error saving ${key} to localStorage:`, error);
+    console.error('Error saving to localStorage:', error);
   }
 };
