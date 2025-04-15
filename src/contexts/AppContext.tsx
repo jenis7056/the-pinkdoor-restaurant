@@ -102,7 +102,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   const updateOrderStatus = (orderId: string, status: OrderStatus) => {
-    handleUpdateOrderStatus(orderId, status, setOrders);
+    handleUpdateOrderStatus(orderId, status, setOrders, setCurrentCustomer);
   };
 
   // Cart management functions

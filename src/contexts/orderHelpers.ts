@@ -1,3 +1,4 @@
+
 import { Customer, OrderItem, Order, OrderStatus } from "@/types";
 import { toast } from "sonner";
 
@@ -60,7 +61,8 @@ export const handleCancelOrder = (
 export const handleUpdateOrderStatus = (
   orderId: string, 
   status: OrderStatus,
-  setOrders: React.Dispatch<React.SetStateAction<Order[]>>
+  setOrders: React.Dispatch<React.SetStateAction<Order[]>>,
+  setCurrentCustomer?: React.Dispatch<React.SetStateAction<Customer | null>>
 ) => {
   console.log("Updating order status:", orderId, status);
   
@@ -101,6 +103,19 @@ export const handleUpdateOrderStatus = (
         )
       );
       toast.success('Your order has been completed');
+      
+      // Logout customer when order is completed
+      if (setCurrentCustomer) {
+        setCurrentCustomer(null);
+        toast.success('Thank you for dining with us!');
+      }
     }, 60000); // 60 seconds
   }
+  
+  // Immediate logout if admin manually completes the order
+  if (status === 'completed' && setCurrentCustomer) {
+    setCurrentCustomer(null);
+    toast.success('Thank you for dining with us!');
+  }
 };
+
