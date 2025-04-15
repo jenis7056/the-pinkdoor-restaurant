@@ -1,8 +1,17 @@
+
 import { useNavigate } from "react-router-dom";
 import Layout from "@/components/Layout";
 import { useApp } from "@/contexts/AppContext";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { 
+  UtensilsCrossed, 
+  Users, 
+  ShoppingBag, 
+  Clock,
+  Check,
+  ChefHat
+} from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import OrderCard from "@/components/OrderCard";
 import { OrderStatus } from "@/types";
