@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Layout from "@/components/Layout";
@@ -5,12 +6,12 @@ import MenuSection from "@/components/MenuSection";
 import { useApp } from "@/contexts/AppContext";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ChevronRight, ShoppingCart, ClipboardList } from "lucide-react";
+import { ChevronRight, ShoppingCart, ClipboardList, LogOut } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 
 const CustomerHome = () => {
   const navigate = useNavigate();
-  const { menuItems, categories, currentCustomer, cart, orders } = useApp();
+  const { menuItems, categories, currentCustomer, cart, orders, logout } = useApp();
   const [selectedCategory, setSelectedCategory] = useState<string>(categories[0]?.name || "");
 
   // Redirect if not logged in as customer
@@ -36,6 +37,12 @@ const CustomerHome = () => {
   // Get subcategories for the selected category
   const subcategories = categories.find(cat => cat.name === selectedCategory)?.subcategories || [];
 
+  // Handle customer logout
+  const handleLogout = () => {
+    logout();
+    navigate("/customer-registration");
+  };
+
   return (
     <Layout>
       <div className="container mx-auto px-4 py-8">
@@ -48,7 +55,7 @@ const CustomerHome = () => {
               </p>
             </div>
             
-            <div className="mt-4 md:mt-0">
+            <div className="mt-4 md:mt-0 flex space-x-2">
               <Button 
                 onClick={() => navigate("/customer/cart")}
                 className="bg-pink-700 hover:bg-pink-800 flex items-center"
@@ -58,6 +65,15 @@ const CustomerHome = () => {
                 {totalItems > 0 && (
                   <Badge className="ml-2 bg-white text-pink-800">{totalItems}</Badge>
                 )}
+              </Button>
+              
+              <Button 
+                variant="outline"
+                onClick={handleLogout}
+                className="border-pink-700 text-pink-700 hover:bg-pink-50"
+              >
+                <LogOut className="mr-2 h-5 w-5" />
+                Logout
               </Button>
             </div>
           </div>
