@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useApp } from "@/contexts/AppContext";
@@ -37,7 +38,7 @@ const Login = () => {
         admin: "/admin",
         waiter: "/waiter",
         chef: "/chef",
-        customer: "/customer",
+        customer: "/customer" // Add customer role redirect
       };
       
       // Get the destination path based on user role

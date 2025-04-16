@@ -6,7 +6,7 @@ import OrderCard from "@/components/OrderCard";
 import { useApp } from "@/contexts/AppContext";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Order } from "@/types";
+import { Order, UserRole } from "@/types";
 import { ArrowLeft, ShoppingBag } from "lucide-react";
 
 const CustomerOrders = () => {
@@ -48,6 +48,9 @@ const CustomerOrders = () => {
   };
 
   const ordersToDisplay = getOrdersToDisplay();
+  
+  // Use explicit UserRole type
+  const userRole: UserRole = "customer";
 
   return (
     <Layout>
@@ -85,7 +88,7 @@ const CustomerOrders = () => {
                   <OrderCard
                     key={order.id}
                     order={order}
-                    userRole="customer"
+                    userRole={userRole}
                   />
                 ))}
               </div>
@@ -111,7 +114,7 @@ const CustomerOrders = () => {
                   <OrderCard
                     key={order.id}
                     order={order}
-                    userRole="customer"
+                    userRole={userRole}
                   />
                 ))}
               </div>

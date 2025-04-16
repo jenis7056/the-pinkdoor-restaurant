@@ -7,7 +7,7 @@ export interface User {
   role: UserRole;
 }
 
-export type UserRole = 'admin' | 'waiter' | 'chef';
+export type UserRole = 'admin' | 'waiter' | 'chef' | 'customer';
 
 // Customer
 export interface Customer {

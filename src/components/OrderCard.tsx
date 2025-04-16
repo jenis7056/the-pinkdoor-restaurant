@@ -1,10 +1,11 @@
 
-import { Order, OrderItem, OrderStatus } from "@/types";
+// Just updating the comparison for the customer role
+import { useState, useCallback } from "react";
+import { Order, OrderItem, OrderStatus, UserRole } from "@/types";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { UserRole } from "@/types";
 import { toast } from "sonner";
 import { 
   Clock, 
@@ -19,7 +20,6 @@ import {
   Plus,
   Trash
 } from "lucide-react";
-import { useState, useCallback } from "react";
 import { useApp } from "@/contexts/AppContext";
 import { handleCancelOrder } from "@/contexts/orderHelpers";
 

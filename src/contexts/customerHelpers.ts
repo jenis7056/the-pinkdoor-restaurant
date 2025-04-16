@@ -30,10 +30,11 @@ export const handleRegisterCustomer = (
     throw new Error("This table is currently occupied. Please choose another table.");
   }
   
-  const newCustomer = {
+  const newCustomer: Customer = {
     id: crypto.randomUUID(),
     name,
     tableNumber,
+    createdAt: new Date().toISOString()
   };
   
   setCustomers(prev => [...prev, newCustomer]);
