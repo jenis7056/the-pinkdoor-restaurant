@@ -1,4 +1,23 @@
 
+// User and Authentication
+export interface User {
+  id: string;
+  username: string;
+  name: string;
+  role: UserRole;
+}
+
+export type UserRole = 'admin' | 'waiter' | 'chef';
+
+// Customer
+export interface Customer {
+  id: string;
+  name: string;
+  tableNumber?: number;
+  createdAt: string;
+}
+
+// Menu Items
 export interface MenuItem {
   id: string;
   name: string;
@@ -6,6 +25,36 @@ export interface MenuItem {
   description: string;
   category: string;
   subcategory: string;
-  image: string;  // Made this required
+  image: string;
   isSpecial?: boolean;
 }
+
+// Categories
+export interface Category {
+  name: string;
+  subcategories: string[];
+}
+
+// Order
+export interface Order {
+  id: string;
+  customerId: string;
+  customerName: string;
+  tableNumber: number;
+  items: OrderItem[];
+  status: OrderStatus;
+  totalAmount: number;
+  createdAt: string;
+  updatedAt: string;
+  canCancel: boolean;
+}
+
+export interface OrderItem {
+  id: string;
+  menuItemId: string;
+  menuItem: MenuItem;
+  quantity: number;
+  notes?: string;
+}
+
+export type OrderStatus = 'pending' | 'confirmed' | 'preparing' | 'ready' | 'served' | 'completed';

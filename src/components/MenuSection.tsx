@@ -1,5 +1,4 @@
-
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo, memo } from "react";
 import { MenuItem as MenuItemType } from "@/types";
 import MenuItem from "./MenuItem";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -18,7 +17,7 @@ interface MenuSectionProps {
   onDelete?: (id: string) => void;
 }
 
-const MenuSection = ({
+const MenuSection = memo(({
   menuItems,
   category,
   subcategories,
@@ -29,55 +28,58 @@ const MenuSection = ({
   const [searchQuery, setSearchQuery] = useState("");
   const { orders, currentCustomer } = useApp();
 
-  // Track ordered items with their status
-  const getItemStatus = (menuItemId: string) => {
-    if (!currentCustomer) return null;
-    
-    // Find active orders for current customer
-    const activeOrders = orders.filter(
-      order => 
-        order.customerId === currentCustomer.id && 
-        order.status !== "completed"
-    );
-
-    // Look through order items to find matching menu item
-    for (const order of activeOrders) {
-      for (const item of order.items) {
-        if (item.menuItemId === menuItemId) {
-          return order.status;
+  const getItemStatus = useMemo(() => {
+    return (menuItemId: string) => {
+      if (!currentCustomer) return null;
+      
+      const activeOrders = orders.filter(
+        order => 
+          order.customerId === currentCustomer.id && 
+          order.status !== "completed"
+      );
+  
+      for (const order of activeOrders) {
+        for (const item of order.items) {
+          if (item.menuItemId === menuItemId) {
+            return order.status;
+          }
         }
       }
-    }
+      
+      return null;
+    };
+  }, [orders, currentCustomer]);
+
+  const filteredItems = useMemo(() => {
+    const displayableItems = menuItems.filter(
+      (item) => {
+        const status = getItemStatus(item.id);
+        return !status || (status !== "served");
+      }
+    );
     
-    return null;
-  };
+    return displayableItems.filter(
+      (item) =>
+        item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        item.description.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+  }, [menuItems, searchQuery, getItemStatus]);
 
-  // Filter items to hide those that have been served
-  const displayableItems = menuItems.filter(
-    (item) => {
-      const status = getItemStatus(item.id);
-      // Show items that: 1) aren't ordered or 2) are not yet served
-      return !status || (status !== "served");
-    }
-  );
+  const subcategoryData = useMemo(() => {
+    const uncategorizedItems = filteredItems.filter(
+      (item) => !item.subcategory || item.subcategory === ""
+    );
   
-  // Apply search filter
-  const filteredItems = displayableItems.filter(
-    (item) =>
-      item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      item.description.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+    const subcategoryItems = subcategories.map((subcategory) => ({
+      subcategory,
+      items: filteredItems.filter((item) => item.subcategory === subcategory),
+    }));
 
-  // Get all items without subcategory or with empty subcategory
-  const uncategorizedItems = filteredItems.filter(
-    (item) => !item.subcategory || item.subcategory === ""
-  );
-
-  // Get items for each subcategory
-  const subcategoryItems = subcategories.map((subcategory) => ({
-    subcategory,
-    items: filteredItems.filter((item) => item.subcategory === subcategory),
-  }));
+    return {
+      uncategorizedItems,
+      subcategoryItems
+    };
+  }, [filteredItems, subcategories]);
 
   const statusBadgeStyles = {
     pending: "bg-yellow-100 text-yellow-800",
@@ -92,7 +94,6 @@ const MenuSection = ({
     return (
       <div key={item.id} className="relative">
         <MenuItem 
-          key={item.id} 
           menuItem={item} 
           isAdmin={isAdmin}
           onEdit={onEdit}
@@ -108,6 +109,9 @@ const MenuSection = ({
       </div>
     );
   };
+
+  const { uncategorizedItems, subcategoryItems } = subcategoryData;
+  const defaultTab = uncategorizedItems.length > 0 ? "_default" : subcategoryItems[0]?.subcategory;
 
   return (
     <div className="py-6">
@@ -129,13 +133,11 @@ const MenuSection = ({
       </div>
 
       {(subcategories.length === 0 || filteredItems.length === 0) ? (
-        // If no subcategories or no items match search, just show grid
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
           {filteredItems.map((item) => renderMenuItem(item))}
         </div>
       ) : (
-        // Otherwise, show tabs for each subcategory
-        <Tabs defaultValue={uncategorizedItems.length > 0 ? "_default" : subcategories[0]}>
+        <Tabs defaultValue={defaultTab}>
           <ScrollArea className="w-full whitespace-nowrap">
             <TabsList className="mb-6 bg-pink-50">
               {uncategorizedItems.length > 0 && (
@@ -179,6 +181,8 @@ const MenuSection = ({
       )}
     </div>
   );
-};
+});
+
+MenuSection.displayName = "MenuSection";
 
 export default MenuSection;

@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import Layout from "@/components/Layout";
 import MenuSection from "@/components/MenuSection";
@@ -12,11 +12,24 @@ import { Badge } from "@/components/ui/badge";
 const CustomerHome = () => {
   const navigate = useNavigate();
   const { menuItems, categories, currentCustomer, cart, orders, logout } = useApp();
-  const [selectedCategory, setSelectedCategory] = useState<string>(categories[0]?.name || "");
+  const [selectedCategory, setSelectedCategory] = useState<string>("");
 
-  // Redirect if not logged in as customer
+  // Set initial category when categories are loaded
+  useEffect(() => {
+    if (categories.length > 0 && !selectedCategory) {
+      setSelectedCategory(categories[0]?.name || "");
+    }
+  }, [categories, selectedCategory]);
+
+  // Redirect if not logged in as customer - now in useEffect to avoid React warnings
+  useEffect(() => {
+    if (!currentCustomer) {
+      navigate("/customer-registration");
+    }
+  }, [currentCustomer, navigate]);
+
+  // If still loading or no customer, show nothing
   if (!currentCustomer) {
-    navigate("/customer-registration");
     return null;
   }
 

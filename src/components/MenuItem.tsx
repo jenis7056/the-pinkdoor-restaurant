@@ -1,3 +1,4 @@
+
 import { MenuItem as MenuItemType } from "@/types";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -11,7 +12,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { useApp } from "@/contexts/AppContext";
-import { useState } from "react";
+import { useState, memo } from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
@@ -24,7 +25,8 @@ interface MenuItemProps {
   onDelete?: (id: string) => void;
 }
 
-const MenuItem = ({ menuItem, isAdmin = false, onEdit, onDelete }: MenuItemProps) => {
+// Use React.memo to prevent unnecessary re-renders
+const MenuItem = memo(({ menuItem, isAdmin = false, onEdit, onDelete }: MenuItemProps) => {
   const { addToCart, currentUser, currentCustomer } = useApp();
   const [quantity, setQuantity] = useState(1);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -48,6 +50,8 @@ const MenuItem = ({ menuItem, isAdmin = false, onEdit, onDelete }: MenuItemProps
           src={menuItem.image} 
           alt={menuItem.name} 
           className="object-cover w-full h-full"
+          loading="lazy"  // Add lazy loading for better performance
+          decoding="async" // Add async decoding for better performance
         />
       </AspectRatio>
 
@@ -175,6 +179,9 @@ const MenuItem = ({ menuItem, isAdmin = false, onEdit, onDelete }: MenuItemProps
       </CardFooter>
     </Card>
   );
-};
+});
+
+// Add display name for better debugging
+MenuItem.displayName = "MenuItem";
 
 export default MenuItem;
