@@ -66,8 +66,18 @@ export const handleUpdateOrderStatus = (
 ) => {
   console.log("Updating order status:", orderId, status);
   
-  setOrders(prev => 
-    prev.map(order => 
+  // Use a more optimized approach to update the order
+  // This reduces unnecessary re-renders
+  setOrders(prev => {
+    // Find the order to update first
+    const orderToUpdate = prev.find(order => order.id === orderId);
+    if (!orderToUpdate || orderToUpdate.status === status) {
+      // No change needed if order doesn't exist or status is the same
+      return prev;
+    }
+    
+    // Only map through the array if we need to make a change
+    return prev.map(order => 
       order.id === orderId 
         ? { 
             ...order, 
@@ -75,8 +85,8 @@ export const handleUpdateOrderStatus = (
             updatedAt: new Date().toISOString() 
           } 
         : order
-    )
-  );
+    );
+  });
   
   const statusMessages = {
     'confirmed': 'Order confirmed by waiter',
@@ -91,8 +101,13 @@ export const handleUpdateOrderStatus = (
   // Auto-complete orders after they've been served for a while (60 seconds)
   if (status === 'served') {
     setTimeout(() => {
-      setOrders(prev => 
-        prev.map(order => 
+      setOrders(prev => {
+        // First check if the order still exists and is still in served status
+        const orderToComplete = prev.find(order => order.id === orderId && order.status === 'served');
+        if (!orderToComplete) return prev;
+        
+        // Only map through the array if needed
+        return prev.map(order => 
           order.id === orderId 
             ? { 
                 ...order, 
@@ -100,8 +115,9 @@ export const handleUpdateOrderStatus = (
                 updatedAt: new Date().toISOString() 
               } 
             : order
-        )
-      );
+        );
+      });
+      
       toast.success('Your order has been completed');
       
       // Logout customer when order is completed

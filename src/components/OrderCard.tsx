@@ -1,3 +1,4 @@
+
 import { Order, OrderItem, OrderStatus } from "@/types";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -18,7 +19,7 @@ import {
   Plus,
   Trash
 } from "lucide-react";
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { useApp } from "@/contexts/AppContext";
 import { handleCancelOrder } from "@/contexts/orderHelpers";
 
@@ -58,13 +59,13 @@ const OrderCard = ({ order, userRole, updateStatus }: OrderCardProps) => {
     }).format(date);
   };
 
-  const getNextStatus = () => {
+  const getNextStatus = useCallback(() => {
     const statusFlow: OrderStatus[] = ["pending", "confirmed", "preparing", "ready", "served", "completed"];
     const currentIndex = statusFlow.indexOf(order.status);
     return statusFlow[currentIndex + 1];
-  };
+  }, [order.status]);
 
-  const canUpdateStatus = (role: UserRole, status: OrderStatus, nextStatus: OrderStatus) => {
+  const canUpdateStatus = useCallback((role: UserRole, status: OrderStatus, nextStatus: OrderStatus) => {
     if (role === "admin") return true;
 
     switch (role) {
@@ -77,9 +78,9 @@ const OrderCard = ({ order, userRole, updateStatus }: OrderCardProps) => {
       default:
         return false;
     }
-  };
+  }, []);
 
-  const updateItemQuantity = (itemId: string, delta: number) => {
+  const updateItemQuantity = useCallback((itemId: string, delta: number) => {
     if (order.status !== 'pending') {
       toast.error("Can only modify pending orders");
       return;
@@ -110,9 +111,9 @@ const OrderCard = ({ order, userRole, updateStatus }: OrderCardProps) => {
     }));
 
     toast.success("Order updated successfully");
-  };
+  }, [order.id, order.status, setOrders]);
 
-  const removeItem = (itemId: string) => {
+  const removeItem = useCallback((itemId: string) => {
     if (order.status !== 'pending') {
       toast.error("Can only modify pending orders");
       return;
@@ -136,9 +137,9 @@ const OrderCard = ({ order, userRole, updateStatus }: OrderCardProps) => {
     }));
 
     toast.success("Item removed from order");
-  };
+  }, [order.id, order.status, setOrders]);
 
-  const renderStatusButton = () => {
+  const renderStatusButton = useCallback(() => {
     const nextStatus = getNextStatus();
     if (!nextStatus || !updateStatus) return null;
 
@@ -153,7 +154,7 @@ const OrderCard = ({ order, userRole, updateStatus }: OrderCardProps) => {
       );
     }
     return null;
-  };
+  }, [userRole, order.id, order.status, getNextStatus, canUpdateStatus, updateStatus]);
 
   const totalAmount = new Intl.NumberFormat("en-IN", {
     style: "currency",
@@ -161,11 +162,15 @@ const OrderCard = ({ order, userRole, updateStatus }: OrderCardProps) => {
     minimumFractionDigits: 0,
   }).format(order.totalAmount);
 
-  const handleCancel = () => {
+  const handleCancel = useCallback(() => {
     if (window.confirm('Are you sure you want to cancel this order?')) {
       handleCancelOrder(order.id, setOrders);
     }
-  };
+  }, [order.id, setOrders]);
+
+  const toggleDetails = useCallback(() => {
+    setShowDetails(prev => !prev);
+  }, []);
 
   return (
     <Card className="w-full border-pink-100">
@@ -194,7 +199,7 @@ const OrderCard = ({ order, userRole, updateStatus }: OrderCardProps) => {
           <Button 
             variant="ghost" 
             size="sm"
-            onClick={() => setShowDetails(!showDetails)}
+            onClick={toggleDetails}
             className="text-pink-700 p-0 h-auto"
           >
             {showDetails ? "Hide details" : "View details"}
