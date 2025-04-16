@@ -1,4 +1,3 @@
-
 import { MenuItem as MenuItemType } from "@/types";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -16,6 +15,7 @@ import { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
+import { AspectRatio } from "@/components/ui/aspect-ratio";
 
 interface MenuItemProps {
   menuItem: MenuItemType;
@@ -41,14 +41,26 @@ const MenuItem = ({ menuItem, isAdmin = false, onEdit, onDelete }: MenuItemProps
     minimumFractionDigits: 0,
   }).format(menuItem.price);
 
+  const defaultImage = "https://source.unsplash.com/featured/400x300/?food";
+
   return (
     <Card className="h-full menu-item-transition bg-white border-pink-100 overflow-hidden relative">
       {menuItem.isSpecial && (
-        <Badge className="absolute top-2 right-2 bg-accent text-accent-foreground">
+        <Badge className="absolute top-2 right-2 z-10 bg-accent text-accent-foreground">
           Special
         </Badge>
       )}
       
+      <div className="relative">
+        <AspectRatio ratio={4/3}>
+          <img
+            src={menuItem.image || defaultImage}
+            alt={menuItem.name}
+            className="object-cover w-full h-full rounded-t-lg"
+          />
+        </AspectRatio>
+      </div>
+
       <CardHeader className="pb-2">
         <CardTitle className="text-lg font-playfair text-pink-900">{menuItem.name}</CardTitle>
         <CardDescription className="text-sm text-gray-600 flex justify-between">
