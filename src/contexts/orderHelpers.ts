@@ -119,18 +119,22 @@ export const handleUpdateOrderStatus = (
       });
       
       toast.success('Your order has been completed');
-      
-      // Logout customer when order is completed
-      if (setCurrentCustomer) {
-        setCurrentCustomer(null);
-        toast.success('Thank you for dining with us!');
-      }
     }, 60000); // 60 seconds
   }
   
-  // Immediate logout if admin manually completes the order
+  // Only logout customer when admin manually completes the order from admin panel
+  // Do NOT auto-logout when a customer confirms their own order
   if (status === 'completed' && setCurrentCustomer) {
-    setCurrentCustomer(null);
-    toast.success('Thank you for dining with us!');
+    // Check if this is an admin/staff action or a customer action
+    const isCustomerAction = document.location.pathname.includes('/customer');
+    
+    // Only trigger the auto-logout if this is NOT a customer action
+    if (!isCustomerAction) {
+      // Add a small delay before logout to prevent UI issues
+      setTimeout(() => {
+        setCurrentCustomer(null);
+        toast.success('Thank you for dining with us!');
+      }, 1500);
+    }
   }
 };
