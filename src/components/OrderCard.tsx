@@ -1,4 +1,3 @@
-
 import { Order, OrderItem, OrderStatus } from "@/types";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -14,7 +13,10 @@ import {
   BellRing, 
   Coffee,
   Receipt,
-  X
+  X,
+  Minus,
+  Plus,
+  Trash
 } from "lucide-react";
 import { useState } from "react";
 import { useApp } from "@/contexts/AppContext";
@@ -75,6 +77,65 @@ const OrderCard = ({ order, userRole, updateStatus }: OrderCardProps) => {
       default:
         return false;
     }
+  };
+
+  const updateItemQuantity = (itemId: string, delta: number) => {
+    if (order.status !== 'pending') {
+      toast.error("Can only modify pending orders");
+      return;
+    }
+
+    setOrders(prev => prev.map(o => {
+      if (o.id !== order.id) return o;
+
+      const updatedItems = o.items.map(item => {
+        if (item.id !== itemId) return item;
+        
+        const newQuantity = item.quantity + delta;
+        if (newQuantity <= 0) return null;
+        
+        return { ...item, quantity: newQuantity };
+      }).filter(Boolean) as OrderItem[];
+
+      const totalAmount = updatedItems.reduce(
+        (sum, item) => sum + (item.menuItem.price * item.quantity), 
+        0
+      );
+
+      return {
+        ...o,
+        items: updatedItems,
+        totalAmount
+      };
+    }));
+
+    toast.success("Order updated successfully");
+  };
+
+  const removeItem = (itemId: string) => {
+    if (order.status !== 'pending') {
+      toast.error("Can only modify pending orders");
+      return;
+    }
+
+    setOrders(prev => prev.map(o => {
+      if (o.id !== order.id) return o;
+
+      const updatedItems = o.items.filter(item => item.id !== itemId);
+      
+      const totalAmount = updatedItems.reduce(
+        (sum, item) => sum + (item.menuItem.price * item.quantity), 
+        0
+      );
+
+      return {
+        ...o,
+        items: updatedItems,
+        totalAmount
+      };
+    }));
+
+    toast.success("Item removed from order");
   };
 
   const renderStatusButton = () => {
@@ -148,8 +209,37 @@ const OrderCard = ({ order, userRole, updateStatus }: OrderCardProps) => {
                   <p className="font-medium text-gray-900">{item.quantity} x {item.menuItem.name}</p>
                   <p className="text-sm text-gray-500">{item.menuItem.description.substring(0, 50)}</p>
                 </div>
-                <div className="text-right">
-                  <p className="font-medium">
+                <div className="flex items-center gap-2">
+                  {userRole === 'waiter' && order.status === 'pending' && (
+                    <div className="flex items-center gap-1">
+                      <Button 
+                        variant="outline" 
+                        size="icon" 
+                        className="h-7 w-7"
+                        onClick={() => updateItemQuantity(item.id, -1)}
+                      >
+                        <Minus className="h-4 w-4" />
+                      </Button>
+                      <span className="w-8 text-center">{item.quantity}</span>
+                      <Button 
+                        variant="outline" 
+                        size="icon" 
+                        className="h-7 w-7"
+                        onClick={() => updateItemQuantity(item.id, 1)}
+                      >
+                        <Plus className="h-4 w-4" />
+                      </Button>
+                      <Button 
+                        variant="outline" 
+                        size="icon" 
+                        className="h-7 w-7 text-red-500 hover:text-red-600"
+                        onClick={() => removeItem(item.id)}
+                      >
+                        <Trash className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  )}
+                  <p className="font-medium ml-4">
                     {new Intl.NumberFormat("en-IN", {
                       style: "currency",
                       currency: "INR",
