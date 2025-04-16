@@ -1,4 +1,3 @@
-
 import { MenuItem as MenuItemType } from "@/types";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -170,4 +169,3 @@ const MenuItem = ({ menuItem, isAdmin = false, onEdit, onDelete }: MenuItemProps
 };
 
 export default MenuItem;
-
