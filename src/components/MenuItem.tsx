@@ -15,6 +15,7 @@ import { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
+import { AspectRatio } from "@/components/ui/aspect-ratio";
 
 interface MenuItemProps {
   menuItem: MenuItemType;
@@ -42,6 +43,14 @@ const MenuItem = ({ menuItem, isAdmin = false, onEdit, onDelete }: MenuItemProps
 
   return (
     <Card className="h-full menu-item-transition bg-white border-pink-100 overflow-hidden relative">
+      <AspectRatio ratio={16 / 9}>
+        <img 
+          src={menuItem.image} 
+          alt={menuItem.name} 
+          className="object-cover w-full h-full"
+        />
+      </AspectRatio>
+
       {menuItem.isSpecial && (
         <Badge className="absolute top-2 right-2 z-10 bg-accent text-accent-foreground">
           Special

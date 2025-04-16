@@ -1,4 +1,3 @@
-
 import { MenuItem } from "@/types";
 
 export const menuData: MenuItem[] = [
@@ -10,6 +9,7 @@ export const menuData: MenuItem[] = [
     description: "A rich and creamy tomato soup",
     category: "Starters",
     subcategory: "Soups",
+    image: "https://images.unsplash.com/photo-1488590528505-98d2b5aba04b"
   },
   {
     id: "soup-2",
@@ -18,6 +18,7 @@ export const menuData: MenuItem[] = [
     description: "A spicy and flavorful Chinese soup",
     category: "Starters",
     subcategory: "Soups",
+    image: "https://images.unsplash.com/photo-1518770660439-4636190af475"
   },
   {
     id: "soup-3",
@@ -26,6 +27,7 @@ export const menuData: MenuItem[] = [
     description: "A zesty and tengy soup with mixed vegetable",
     category: "Starters",
     subcategory: "Soups",
+    image: "https://images.unsplash.com/photo-1518770660439-4636190af475"
   },
   {
     id: "soup-4",
@@ -34,6 +36,7 @@ export const menuData: MenuItem[] = [
     description: "A hearty soup with Mexican spices and beans",
     category: "Starters",
     subcategory: "Soups",
+    image: "https://images.unsplash.com/photo-1518770660439-4636190af475"
   },
   {
     id: "soup-5",
@@ -42,6 +45,7 @@ export const menuData: MenuItem[] = [
     description: "A creamy broccoli soup with almond and cheddar",
     category: "Starters",
     subcategory: "Soups",
+    image: "https://images.unsplash.com/photo-1518770660439-4636190af475"
   },
   {
     id: "soup-6",
@@ -50,6 +54,7 @@ export const menuData: MenuItem[] = [
     description: "A healthy green vegetable soup with Asian flavour",
     category: "Starters",
     subcategory: "Soups",
+    image: "https://images.unsplash.com/photo-1518770660439-4636190af475"
   },
 
   // Starters - Fries
@@ -60,6 +65,7 @@ export const menuData: MenuItem[] = [
     description: "Classic crispy plain fries",
     category: "Starters",
     subcategory: "Fries",
+    image: "https://images.unsplash.com/photo-1518770660439-4636190af475"
   },
   {
     id: "fries-2",
@@ -68,6 +74,7 @@ export const menuData: MenuItem[] = [
     description: "Fries with peri peri spice mix",
     category: "Starters",
     subcategory: "Fries",
+    image: "https://images.unsplash.com/photo-1518770660439-4636190af475"
   },
   {
     id: "fries-3",
@@ -76,6 +83,7 @@ export const menuData: MenuItem[] = [
     description: "Fries with Mexican spices and toppings",
     category: "Starters",
     subcategory: "Fries",
+    image: "https://images.unsplash.com/photo-1518770660439-4636190af475"
   },
 
   // Starters - Pizzas
@@ -86,6 +94,7 @@ export const menuData: MenuItem[] = [
     description: "Classic pizza with cheese toppings",
     category: "Starters",
     subcategory: "Pizzas",
+    image: "https://images.unsplash.com/photo-1518770660439-4636190af475"
   },
   {
     id: "pizza-2",
@@ -94,6 +103,7 @@ export const menuData: MenuItem[] = [
     description: "Veggies topped with mozzarella cheese",
     category: "Starters",
     subcategory: "Pizzas",
+    image: "https://images.unsplash.com/photo-1518770660439-4636190af475"
   },
   {
     id: "pizza-3",
@@ -102,6 +112,7 @@ export const menuData: MenuItem[] = [
     description: "Sautéed mushrooms with Neapolitan sauce and mozzarella cheese",
     category: "Starters",
     subcategory: "Pizzas",
+    image: "https://images.unsplash.com/photo-1518770660439-4636190af475"
   },
   {
     id: "pizza-4",
@@ -110,6 +121,7 @@ export const menuData: MenuItem[] = [
     description: "Pizza with eight types of cheese",
     category: "Starters",
     subcategory: "Pizzas",
+    image: "https://images.unsplash.com/photo-1518770660439-4636190af475"
   },
   {
     id: "pizza-5",
@@ -118,6 +130,7 @@ export const menuData: MenuItem[] = [
     description: "Pizza with capsicum, jalapeno, baby corn, and mozzarella cheese",
     category: "Starters",
     subcategory: "Pizzas",
+    image: "https://images.unsplash.com/photo-1518770660439-4636190af475"
   },
   {
     id: "pizza-6",
@@ -127,6 +140,7 @@ export const menuData: MenuItem[] = [
     category: "Starters",
     subcategory: "Pizzas",
     isSpecial: true,
+    image: "https://images.unsplash.com/photo-1518770660439-4636190af475"
   },
 
   // Starters - Sizzlers
@@ -137,6 +151,7 @@ export const menuData: MenuItem[] = [
     description: "Manchurian balls, rice or noodles, mixed vegetables, soy sauce, spring onions, salted fries",
     category: "Starters",
     subcategory: "Sizzlers",
+    image: "https://images.unsplash.com/photo-1518770660439-4636190af475"
   },
   {
     id: "sizzler-2",
@@ -145,6 +160,7 @@ export const menuData: MenuItem[] = [
     description: "Grilled chimichanga with Mexican rice, topped with salsa curry and sour cream",
     category: "Starters",
     subcategory: "Sizzlers",
+    image: "https://images.unsplash.com/photo-1518770660439-4636190af475"
   },
   {
     id: "sizzler-3",
@@ -154,6 +170,7 @@ export const menuData: MenuItem[] = [
     category: "Starters",
     subcategory: "Sizzlers",
     isSpecial: true,
+    image: "https://images.unsplash.com/photo-1518770660439-4636190af475"
   },
   {
     id: "sizzler-4",
@@ -162,6 +179,7 @@ export const menuData: MenuItem[] = [
     description: "Dragon Paneer, bell peppers, onions, garlic, schezwan sauce, noodles or rice, mixed vegetables, soy sauce",
     category: "Starters",
     subcategory: "Sizzlers",
+    image: "https://images.unsplash.com/photo-1518770660439-4636190af475"
   },
 
   // More starters
@@ -172,6 +190,7 @@ export const menuData: MenuItem[] = [
     description: "Steamed vegetarian momos (6 pcs)",
     category: "Starters",
     subcategory: "Starter",
+    image: "https://images.unsplash.com/photo-1518770660439-4636190af475"
   },
   {
     id: "starter-2",
@@ -180,6 +199,7 @@ export const menuData: MenuItem[] = [
     description: "Flavored momos with Chinese spices",
     category: "Starters",
     subcategory: "Starter",
+    image: "https://images.unsplash.com/photo-1518770660439-4636190af475"
   },
   {
     id: "starter-3",
@@ -188,6 +208,7 @@ export const menuData: MenuItem[] = [
     description: "Crispy fried momos",
     category: "Starters",
     subcategory: "Starter",
+    image: "https://images.unsplash.com/photo-1518770660439-4636190af475"
   },
   {
     id: "starter-4",
@@ -196,6 +217,7 @@ export const menuData: MenuItem[] = [
     description: "Spiced vegetable Manchurian, available dry or with gravy",
     category: "Starters",
     subcategory: "Starter",
+    image: "https://images.unsplash.com/photo-1518770660439-4636190af475"
   },
   {
     id: "starter-5",
@@ -204,6 +226,7 @@ export const menuData: MenuItem[] = [
     description: "Mixed vegetable fingers rolled with red sauce",
     category: "Starters",
     subcategory: "Starter",
+    image: "https://images.unsplash.com/photo-1518770660439-4636190af475"
   },
   {
     id: "starter-6",
@@ -212,6 +235,7 @@ export const menuData: MenuItem[] = [
     description: "Vegetable spring rolls with dipping sauce",
     category: "Starters",
     subcategory: "Starter",
+    image: "https://images.unsplash.com/photo-1518770660439-4636190af475"
   },
   {
     id: "starter-7",
@@ -220,6 +244,7 @@ export const menuData: MenuItem[] = [
     description: "Crispy fried vegetables with spices",
     category: "Starters",
     subcategory: "Starter",
+    image: "https://images.unsplash.com/photo-1518770660439-4636190af475"
   },
   {
     id: "starter-8",
@@ -229,6 +254,7 @@ export const menuData: MenuItem[] = [
     category: "Starters",
     subcategory: "Starter",
     isSpecial: true,
+    image: "https://images.unsplash.com/photo-1518770660439-4636190af475"
   },
 
   // Tandoor Starters
@@ -239,6 +265,7 @@ export const menuData: MenuItem[] = [
     description: "Spiced vegetable kababs",
     category: "Starters",
     subcategory: "Tandoor Starters",
+    image: "https://images.unsplash.com/photo-1518770660439-4636190af475"
   },
   {
     id: "tandoor-2",
@@ -247,6 +274,7 @@ export const menuData: MenuItem[] = [
     description: "Dry paneer tikka with spices",
     category: "Starters",
     subcategory: "Tandoor Starters",
+    image: "https://images.unsplash.com/photo-1518770660439-4636190af475"
   },
   {
     id: "tandoor-3",
@@ -255,6 +283,7 @@ export const menuData: MenuItem[] = [
     description: "Creamy paneer tikka",
     category: "Starters",
     subcategory: "Tandoor Starters",
+    image: "https://images.unsplash.com/photo-1518770660439-4636190af475"
   },
   {
     id: "tandoor-4",
@@ -264,6 +293,7 @@ export const menuData: MenuItem[] = [
     category: "Starters",
     subcategory: "Tandoor Starters",
     isSpecial: true,
+    image: "https://images.unsplash.com/photo-1518770660439-4636190af475"
   },
 
   // Main Course - Assorted Papad
@@ -274,6 +304,7 @@ export const menuData: MenuItem[] = [
     description: "Traditional thin and crispy roasted papad",
     category: "Main Course",
     subcategory: "Assorted Papad",
+    image: "https://images.unsplash.com/photo-1518770660439-4636190af475"
   },
   {
     id: "papad-2",
@@ -282,6 +313,7 @@ export const menuData: MenuItem[] = [
     description: "Deep-fried crispy papad",
     category: "Main Course",
     subcategory: "Assorted Papad",
+    image: "https://images.unsplash.com/photo-1518770660439-4636190af475"
   },
   {
     id: "papad-3",
@@ -290,6 +322,7 @@ export const menuData: MenuItem[] = [
     description: "Papad topped with spiced onion-tomato mix",
     category: "Main Course",
     subcategory: "Assorted Papad",
+    image: "https://images.unsplash.com/photo-1518770660439-4636190af475"
   },
   {
     id: "papad-4",
@@ -298,6 +331,7 @@ export const menuData: MenuItem[] = [
     description: "Papad topped with cheese",
     category: "Main Course",
     subcategory: "Assorted Papad",
+    image: "https://images.unsplash.com/photo-1518770660439-4636190af475"
   },
   {
     id: "papad-5",
@@ -306,6 +340,7 @@ export const menuData: MenuItem[] = [
     description: "Papad topped with cheese and spiced onion-tomato mix",
     category: "Main Course",
     subcategory: "Assorted Papad",
+    image: "https://images.unsplash.com/photo-1518770660439-4636190af475"
   },
 
   // Main Course - Paneer Ki Subji
@@ -316,6 +351,7 @@ export const menuData: MenuItem[] = [
     description: "Red gravy with paneer cubes and added butter",
     category: "Main Course",
     subcategory: "Paneer Ki Subji",
+    image: "https://images.unsplash.com/photo-1518770660439-4636190af475"
   },
   {
     id: "paneer-2",
@@ -324,6 +360,7 @@ export const menuData: MenuItem[] = [
     description: "Medium spicy red gravy with onion & capsicum & roasted paneer",
     category: "Main Course",
     subcategory: "Paneer Ki Subji",
+    image: "https://images.unsplash.com/photo-1518770660439-4636190af475"
   },
   {
     id: "paneer-3",
@@ -332,6 +369,7 @@ export const menuData: MenuItem[] = [
     description: "Brown gravy with onion capsicum medium spicy",
     category: "Main Course",
     subcategory: "Paneer Ki Subji",
+    image: "https://images.unsplash.com/photo-1518770660439-4636190af475"
   },
   {
     id: "paneer-4",
@@ -340,6 +378,7 @@ export const menuData: MenuItem[] = [
     description: "Stuffed paneer with brown gravy",
     category: "Main Course",
     subcategory: "Paneer Ki Subji",
+    image: "https://images.unsplash.com/photo-1518770660439-4636190af475"
   },
   {
     id: "paneer-5",
@@ -348,6 +387,7 @@ export const menuData: MenuItem[] = [
     description: "Spicy red gravy with sizzling onion & capsicum & roasted paneer",
     category: "Main Course",
     subcategory: "Paneer Ki Subji",
+    image: "https://images.unsplash.com/photo-1518770660439-4636190af475"
   },
   {
     id: "paneer-6",
@@ -356,6 +396,7 @@ export const menuData: MenuItem[] = [
     description: "Mild white gravy touching red gravy & paneer cubes",
     category: "Main Course",
     subcategory: "Paneer Ki Subji",
+    image: "https://images.unsplash.com/photo-1518770660439-4636190af475"
   },
   {
     id: "paneer-7",
@@ -364,6 +405,7 @@ export const menuData: MenuItem[] = [
     description: "Brown gravy, & papad wrapped with cheese & paneer",
     category: "Main Course",
     subcategory: "Paneer Ki Subji",
+    image: "https://images.unsplash.com/photo-1518770660439-4636190af475"
   },
   {
     id: "paneer-8",
@@ -372,6 +414,7 @@ export const menuData: MenuItem[] = [
     description: "Paneer cubes with spinach paste and cream",
     category: "Main Course",
     subcategory: "Paneer Ki Subji",
+    image: "https://images.unsplash.com/photo-1518770660439-4636190af475"
   },
   {
     id: "paneer-9",
@@ -380,6 +423,7 @@ export const menuData: MenuItem[] = [
     description: "Diced capsicum, onions, tomato with brown gravy and khade masale",
     category: "Main Course",
     subcategory: "Paneer Ki Subji",
+    image: "https://images.unsplash.com/photo-1518770660439-4636190af475"
   },
   {
     id: "paneer-10",
@@ -388,6 +432,7 @@ export const menuData: MenuItem[] = [
     description: "Mughlai brown gravy with onion capsicum and julienne ginger",
     category: "Main Course",
     subcategory: "Paneer Ki Subji",
+    image: "https://images.unsplash.com/photo-1518770660439-4636190af475"
   },
 
   // Main Course - Veg Subji
@@ -398,6 +443,7 @@ export const menuData: MenuItem[] = [
     description: "Cubed potatoes sautéed with cumin seeds and spices",
     category: "Main Course",
     subcategory: "Veg Subji",
+    image: "https://images.unsplash.com/photo-1518770660439-4636190af475"
   },
   {
     id: "veg-2",
@@ -406,6 +452,7 @@ export const menuData: MenuItem[] = [
     description: "Stuffed baby aloo with red gravy and mixed spices",
     category: "Main Course",
     subcategory: "Veg Subji",
+    image: "https://images.unsplash.com/photo-1518770660439-4636190af475"
   },
   {
     id: "veg-3",
@@ -414,6 +461,7 @@ export const menuData: MenuItem[] = [
     description: "Red gravy with mixed vegetables and added butter",
     category: "Main Course",
     subcategory: "Veg Subji",
+    image: "https://images.unsplash.com/photo-1518770660439-4636190af475"
   },
   {
     id: "veg-4",
@@ -422,6 +470,7 @@ export const menuData: MenuItem[] = [
     description: "Brown gravy with onion, capsicum & mixed vegetable-medium spicy",
     category: "Main Course",
     subcategory: "Veg Subji",
+    image: "https://images.unsplash.com/photo-1518770660439-4636190af475"
   },
   {
     id: "veg-5",
@@ -430,6 +479,7 @@ export const menuData: MenuItem[] = [
     description: "Spicy red gravy with mixed vegetables",
     category: "Main Course",
     subcategory: "Veg Subji",
+    image: "https://images.unsplash.com/photo-1518770660439-4636190af475"
   },
   {
     id: "veg-6",
@@ -438,6 +488,7 @@ export const menuData: MenuItem[] = [
     description: "Spicy red gravy with sizzling mixed vegetables & julienne capsicum, tomato & onion",
     category: "Main Course",
     subcategory: "Veg Subji",
+    image: "https://images.unsplash.com/photo-1518770660439-4636190af475"
   },
   {
     id: "veg-7",
@@ -446,6 +497,7 @@ export const menuData: MenuItem[] = [
     description: "Red gravy sizzling with diced capsicum, onion & mixed vegetable",
     category: "Main Course",
     subcategory: "Veg Subji",
+    image: "https://images.unsplash.com/photo-1518770660439-4636190af475"
   },
   {
     id: "veg-8",
@@ -454,6 +506,7 @@ export const menuData: MenuItem[] = [
     description: "Finger-cut capsicum, onion, vegetables, red & brown gravy",
     category: "Main Course",
     subcategory: "Veg Subji",
+    image: "https://images.unsplash.com/photo-1518770660439-4636190af475"
   },
   {
     id: "veg-9",
@@ -462,6 +515,7 @@ export const menuData: MenuItem[] = [
     description: "Cabbage, capsicum, onion, carrot and papad with medium brown gravy",
     category: "Main Course",
     subcategory: "Veg Subji",
+    image: "https://images.unsplash.com/photo-1518770660439-4636190af475"
   },
   {
     id: "veg-10",
@@ -470,6 +524,7 @@ export const menuData: MenuItem[] = [
     description: "Mixed vegetables with red gravy & makhan",
     category: "Main Course",
     subcategory: "Veg Subji",
+    image: "https://images.unsplash.com/photo-1518770660439-4636190af475"
   },
   {
     id: "veg-11",
@@ -478,6 +533,7 @@ export const menuData: MenuItem[] = [
     description: "Mixed vegetables, mushroom, baby corn in spinach gravy",
     category: "Main Course",
     subcategory: "Veg Subji",
+    image: "https://images.unsplash.com/photo-1518770660439-4636190af475"
   },
 
   // Main Course - Roti Adda
@@ -488,6 +544,7 @@ export const menuData: MenuItem[] = [
     description: "Classic Indian flatbread",
     category: "Main Course",
     subcategory: "Roti Adda",
+    image: "https://images.unsplash.com/photo-1518770660439-4636190af475"
   },
   {
     id: "roti-2",
@@ -496,6 +553,7 @@ export const menuData: MenuItem[] = [
     description: "Buttered Indian flatbread",
     category: "Main Course",
     subcategory: "Roti Adda",
+    image: "https://images.unsplash.com/photo-1518770660439-4636190af475"
   },
   {
     id: "roti-3",
@@ -504,6 +562,7 @@ export const menuData: MenuItem[] = [
     description: "Layered Indian flatbread",
     category: "Main Course",
     subcategory: "Roti Adda",
+    image: "https://images.unsplash.com/photo-1518770660439-4636190af475"
   },
   {
     id: "roti-4",
@@ -512,6 +571,7 @@ export const menuData: MenuItem[] = [
     description: "Tandoori-cooked flatbread",
     category: "Main Course",
     subcategory: "Roti Adda",
+    image: "https://images.unsplash.com/photo-1518770660439-4636190af475"
   },
   {
     id: "roti-5",
@@ -520,6 +580,7 @@ export const menuData: MenuItem[] = [
     description: "Buttered tandoori flatbread",
     category: "Main Course",
     subcategory: "Roti Adda",
+    image: "https://images.unsplash.com/photo-1518770660439-4636190af475"
   },
   {
     id: "roti-6",
@@ -528,6 +589,7 @@ export const menuData: MenuItem[] = [
     description: "Soft naan with butter",
     category: "Main Course",
     subcategory: "Roti Adda",
+    image: "https://images.unsplash.com/photo-1518770660439-4636190af475"
   },
   {
     id: "roti-7",
@@ -536,6 +598,7 @@ export const menuData: MenuItem[] = [
     description: "Layered and flaky paratha",
     category: "Main Course",
     subcategory: "Roti Adda",
+    image: "https://images.unsplash.com/photo-1518770660439-4636190af475"
   },
   {
     id: "roti-8",
@@ -544,6 +607,7 @@ export const menuData: MenuItem[] = [
     description: "Soft kulcha with or without butter",
     category: "Main Course",
     subcategory: "Roti Adda",
+    image: "https://images.unsplash.com/photo-1518770660439-4636190af475"
   },
   {
     id: "roti-9",
@@ -552,6 +616,7 @@ export const menuData: MenuItem[] = [
     description: "Spiced whole wheat bread",
     category: "Main Course",
     subcategory: "Roti Adda",
+    image: "https://images.unsplash.com/photo-1518770660439-4636190af475"
   },
   {
     id: "roti-10",
@@ -560,6 +625,7 @@ export const menuData: MenuItem[] = [
     description: "Naan topped with garlic",
     category: "Main Course",
     subcategory: "Roti Adda",
+    image: "https://images.unsplash.com/photo-1518770660439-4636190af475"
   },
   {
     id: "roti-11",
@@ -568,6 +634,7 @@ export const menuData: MenuItem[] = [
     description: "Naan with green herbs",
     category: "Main Course",
     subcategory: "Roti Adda",
+    image: "https://images.unsplash.com/photo-1518770660439-4636190af475"
   },
 
   // Main Course - Rice
@@ -578,6 +645,7 @@ export const menuData: MenuItem[] = [
     description: "Plain steamed basmati rice",
     category: "Main Course",
     subcategory: "Rice",
+    image: "https://images.unsplash.com/photo-1518770660439-4636190af475"
   },
   {
     id: "rice-2",
@@ -586,6 +654,7 @@ export const menuData: MenuItem[] = [
     description: "Rice tempered with cumin seeds",
     category: "Main Course",
     subcategory: "Rice",
+    image: "https://images.unsplash.com/photo-1518770660439-4636190af475"
   },
   {
     id: "rice-3",
@@ -594,6 +663,7 @@ export const menuData: MenuItem[] = [
     description: "Rice and lentils cooked together, plain or with vegetables",
     category: "Main Course",
     subcategory: "Rice",
+    image: "https://images.unsplash.com/photo-1518770660439-4636190af475"
   },
   {
     id: "rice-4",
@@ -602,6 +672,7 @@ export const menuData: MenuItem[] = [
     description: "Rice cooked with mixed vegetables and spices",
     category: "Main Course",
     subcategory: "Rice",
+    image: "https://images.unsplash.com/photo-1518770660439-4636190af475"
   },
   {
     id: "rice-5",
@@ -610,6 +681,7 @@ export const menuData: MenuItem[] = [
     description: "Fragrant rice layered with spiced vegetables",
     category: "Main Course",
     subcategory: "Rice",
+    image: "https://images.unsplash.com/photo-1518770660439-4636190af475"
   },
   {
     id: "rice-6",
@@ -618,6 +690,7 @@ export const menuData: MenuItem[] = [
     description: "Authentic Hyderabadi style vegetable biryani",
     category: "Main Course",
     subcategory: "Rice",
+    image: "https://images.unsplash.com/photo-1518770660439-4636190af475"
   },
 
   // Main Course - Dal
@@ -628,6 +701,7 @@ export const menuData: MenuItem[] = [
     description: "Yellow lentils tempered with spices",
     category: "Main Course",
     subcategory: "Dal",
+    image: "https://images.unsplash.com/photo-1518770660439-4636190af475"
   },
   {
     id: "dal-2",
@@ -636,6 +710,7 @@ export const menuData: MenuItem[] = [
     description: "Yellow lentils with a spicy tempering",
     category: "Main Course",
     subcategory: "Dal",
+    image: "https://images.unsplash.com/photo-1518770660439-4636190af475"
   },
   {
     id: "dal-3",
@@ -644,6 +719,7 @@ export const menuData: MenuItem[] = [
     description: "Black lentils slow cooked with cream and butter",
     category: "Main Course",
     subcategory: "Dal",
+    image: "https://images.unsplash.com/photo-1518770660439-4636190af475"
   },
 
   // Desserts
@@ -654,6 +730,7 @@ export const menuData: MenuItem[] = [
     description: "Classic vanilla ice cream",
     category: "Desserts",
     subcategory: "",
+    image: "https://images.unsplash.com/photo-1518770660439-4636190af475"
   },
   {
     id: "dessert-2",
@@ -663,6 +740,7 @@ export const menuData: MenuItem[] = [
     category: "Desserts",
     subcategory: "",
     isSpecial: true,
+    image: "https://images.unsplash.com/photo-1518770660439-4636190af475"
   },
 
   // Beverages
@@ -673,6 +751,7 @@ export const menuData: MenuItem[] = [
     description: "Spiced butter milk",
     category: "Beverages",
     subcategory: "",
+    image: "https://images.unsplash.com/photo-1518770660439-4636190af475"
   },
   {
     id: "beverage-2",
@@ -681,6 +760,7 @@ export const menuData: MenuItem[] = [
     description: "Traditional plain butter milk",
     category: "Beverages",
     subcategory: "",
+    image: "https://images.unsplash.com/photo-1518770660439-4636190af475"
   },
   {
     id: "beverage-3",
@@ -689,6 +769,7 @@ export const menuData: MenuItem[] = [
     description: "Sweet yogurt-based drink",
     category: "Beverages",
     subcategory: "",
+    image: "https://images.unsplash.com/photo-1518770660439-4636190af475"
   },
   {
     id: "beverage-4",
@@ -697,6 +778,7 @@ export const menuData: MenuItem[] = [
     description: "Salted yogurt-based drink",
     category: "Beverages",
     subcategory: "",
+    image: "https://images.unsplash.com/photo-1518770660439-4636190af475"
   },
   {
     id: "beverage-5",
@@ -705,6 +787,7 @@ export const menuData: MenuItem[] = [
     description: "Refreshing lemon iced tea",
     category: "Beverages",
     subcategory: "",
+    image: "https://images.unsplash.com/photo-1518770660439-4636190af475"
   },
   {
     id: "beverage-6",
@@ -713,6 +796,7 @@ export const menuData: MenuItem[] = [
     description: "Refreshing peach iced tea",
     category: "Beverages",
     subcategory: "",
+    image: "https://images.unsplash.com/photo-1518770660439-4636190af475"
   },
   {
     id: "beverage-7",
@@ -722,6 +806,7 @@ export const menuData: MenuItem[] = [
     category: "Beverages",
     subcategory: "",
     isSpecial: true,
+    image: "https://images.unsplash.com/photo-1518770660439-4636190af475"
   },
   {
     id: "beverage-8",
@@ -730,6 +815,7 @@ export const menuData: MenuItem[] = [
     description: "Non-alcoholic orange martini",
     category: "Beverages",
     subcategory: "",
+    image: "https://images.unsplash.com/photo-1518770660439-4636190af475"
   },
   {
     id: "beverage-9",
@@ -739,6 +825,7 @@ export const menuData: MenuItem[] = [
     category: "Beverages",
     subcategory: "",
     isSpecial: true,
+    image: "https://images.unsplash.com/photo-1518770660439-4636190af475"
   },
   {
     id: "beverage-10",
@@ -748,6 +835,7 @@ export const menuData: MenuItem[] = [
     category: "Beverages",
     subcategory: "",
     isSpecial: true,
+    image: "https://images.unsplash.com/photo-1518770660439-4636190af475"
   },
   {
     id: "beverage-11",
@@ -757,6 +845,7 @@ export const menuData: MenuItem[] = [
     category: "Beverages",
     subcategory: "",
     isSpecial: true,
+    image: "https://images.unsplash.com/photo-1518770660439-4636190af475"
   },
   {
     id: "beverage-12",
@@ -766,6 +855,7 @@ export const menuData: MenuItem[] = [
     category: "Beverages",
     subcategory: "",
     isSpecial: true,
+    image: "https://images.unsplash.com/photo-1518770660439-4636190af475"
   },
   {
     id: "beverage-13",
@@ -774,5 +864,6 @@ export const menuData: MenuItem[] = [
     description: "Non-alcoholic apple martini",
     category: "Beverages",
     subcategory: "",
+    image: "https://images.unsplash.com/photo-1518770660439-4636190af475"
   }
 ];
