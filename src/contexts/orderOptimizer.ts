@@ -40,6 +40,52 @@ export const optimizeBatchOrderUpdate = (
  * @returns Filtered array
  */
 export const optimizeFilter = <T>(items: T[], predicate: (item: T) => boolean): T[] => {
-  // This could be extended with more optimizations like caching
+  // Quick performance check - if empty array, skip processing
+  if (items.length === 0) return [];
+  
   return items.filter(predicate);
+};
+
+/**
+ * Debounces an operation to prevent too many updates
+ * @param callback Function to debounce
+ * @param delay Delay in milliseconds
+ */
+export const debounce = <T extends (...args: any[]) => any>(callback: T, delay = 300): ((...args: Parameters<T>) => void) => {
+  let timeoutId: ReturnType<typeof setTimeout>;
+  
+  return (...args: Parameters<T>) => {
+    clearTimeout(timeoutId);
+    timeoutId = setTimeout(() => {
+      callback(...args);
+    }, delay);
+  };
+};
+
+/**
+ * Throttles a function to limit how often it can be called
+ * @param callback Function to throttle
+ * @param limit Time limit in milliseconds
+ */
+export const throttle = <T extends (...args: any[]) => any>(callback: T, limit = 300): ((...args: Parameters<T>) => void) => {
+  let waiting = false;
+  let lastArgs: Parameters<T> | null = null;
+  
+  return (...args: Parameters<T>) => {
+    if (waiting) {
+      lastArgs = args;
+      return;
+    }
+    
+    callback(...args);
+    waiting = true;
+    
+    setTimeout(() => {
+      waiting = false;
+      if (lastArgs) {
+        callback(...lastArgs);
+        lastArgs = null;
+      }
+    }, limit);
+  };
 };

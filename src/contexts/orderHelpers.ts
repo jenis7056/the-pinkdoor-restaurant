@@ -1,7 +1,7 @@
 
 import { Customer, OrderItem, Order, OrderStatus } from "@/types";
 import { toast } from "sonner";
-import { optimizeBatchOrderUpdate } from "./orderOptimizer";
+import { optimizeBatchOrderUpdate, throttle } from "./orderOptimizer";
 
 export const handleCreateOrder = (
   items: OrderItem[],
@@ -61,7 +61,8 @@ export const handleCancelOrder = (
   toast.success('Order cancelled successfully');
 };
 
-export const handleUpdateOrderStatus = (
+// Throttle the status update to prevent rapid consecutive updates
+export const handleUpdateOrderStatus = throttle((
   orderId: string, 
   status: OrderStatus,
   setOrders: React.Dispatch<React.SetStateAction<Order[]>>,
@@ -113,4 +114,4 @@ export const handleUpdateOrderStatus = (
       }, 1500);
     }
   }
-};
+}, 300);

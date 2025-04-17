@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useMemo, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import Layout from "@/components/Layout";
 import OrderCard from "@/components/OrderCard";
@@ -9,6 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import { ArrowLeft, Search, ShoppingBag } from "lucide-react";
 import { OrderStatus } from "@/types";
+import { optimizeFilter } from "@/contexts/orderOptimizer";
 
 const AdminOrders = () => {
   const [activeTab, setActiveTab] = useState<OrderStatus | "all" | "active">("active");
@@ -22,26 +23,40 @@ const AdminOrders = () => {
     return null;
   }
 
-  // Filter orders based on search query
-  const filteredOrders = orders.filter(
-    (order) =>
+  // Memoize filtered orders to prevent unnecessary recalculations
+  const filteredOrders = useMemo(() => {
+    if (searchQuery.length === 0) return orders;
+    
+    return optimizeFilter(orders, order => 
       order.customerName.toLowerCase().includes(searchQuery.toLowerCase()) ||
       order.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
       order.tableNumber.toString().includes(searchQuery)
-  );
+    );
+  }, [orders, searchQuery]);
 
-  // Filter orders based on status
-  const getOrdersByStatus = (status: string) => {
+  // Memoize orders filtered by status
+  const getOrdersByStatus = useCallback((status: string) => {
     if (status === "all") return filteredOrders;
     if (status === "active") return filteredOrders.filter(order => order.status !== "completed");
     return filteredOrders.filter(order => order.status === status);
-  };
+  }, [filteredOrders]);
 
-  const ordersToDisplay = getOrdersByStatus(activeTab);
+  const ordersToDisplay = useMemo(() => 
+    getOrdersByStatus(activeTab), 
+    [activeTab, getOrdersByStatus]
+  );
 
-  const handleUpdateStatus = (orderId: string, status: OrderStatus) => {
+  const handleUpdateStatus = useCallback((orderId: string, status: OrderStatus) => {
     updateOrderStatus(orderId, status);
-  };
+  }, [updateOrderStatus]);
+
+  const handleTabChange = useCallback((value: string) => {
+    setActiveTab(value as OrderStatus | "all" | "active");
+  }, []);
+
+  const handleSearchChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchQuery(e.target.value);
+  }, []);
 
   return (
     <Layout>
@@ -68,13 +83,13 @@ const AdminOrders = () => {
             <Input
               placeholder="Search orders..."
               value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
+              onChange={handleSearchChange}
               className="pl-10 border-pink-200"
             />
           </div>
         </div>
 
-        <Tabs defaultValue="active" value={activeTab} onValueChange={(val) => setActiveTab(val as OrderStatus | "all" | "active")}>
+        <Tabs defaultValue="active" value={activeTab} onValueChange={handleTabChange}>
           <TabsList className="bg-pink-50 mb-8">
             <TabsTrigger 
               value="active" 
