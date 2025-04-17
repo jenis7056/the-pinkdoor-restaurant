@@ -1,6 +1,4 @@
-
-// Just updating the comparison for the customer role
-import { useState, useCallback } from "react";
+import { useState, useCallback, memo } from "react";
 import { Order, OrderItem, OrderStatus, UserRole } from "@/types";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -29,7 +27,7 @@ interface OrderCardProps {
   updateStatus?: (orderId: string, status: OrderStatus) => void;
 }
 
-const OrderCard = ({ order, userRole, updateStatus }: OrderCardProps) => {
+const OrderCard = memo(({ order, userRole, updateStatus }: OrderCardProps) => {
   const { orders, setOrders } = useApp();
   const [showDetails, setShowDetails] = useState(false);
 
@@ -297,6 +295,8 @@ const OrderCard = ({ order, userRole, updateStatus }: OrderCardProps) => {
       )}
     </Card>
   );
-};
+});
+
+OrderCard.displayName = "OrderCard";
 
 export default OrderCard;

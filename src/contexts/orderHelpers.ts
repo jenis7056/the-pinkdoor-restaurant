@@ -1,6 +1,7 @@
 
 import { Customer, OrderItem, Order, OrderStatus } from "@/types";
 import { toast } from "sonner";
+import { optimizeBatchOrderUpdate } from "./orderOptimizer";
 
 export const handleCreateOrder = (
   items: OrderItem[],
@@ -32,6 +33,7 @@ export const handleCreateOrder = (
   };
   
   console.log("Creating new order:", newOrder);
+  // Use functional update to avoid stale state
   setOrders(prev => [...prev, newOrder]);
   setCart([]); // Clear the cart after ordering
   toast.success('Your order has been placed successfully!');
@@ -54,6 +56,7 @@ export const handleCancelOrder = (
   orderId: string,
   setOrders: React.Dispatch<React.SetStateAction<Order[]>>
 ) => {
+  // Use function to ensure we have the latest state
   setOrders(prev => prev.filter(order => order.id !== orderId));
   toast.success('Order cancelled successfully');
 };
@@ -66,27 +69,8 @@ export const handleUpdateOrderStatus = (
 ) => {
   console.log("Updating order status:", orderId, status);
   
-  // Use a more optimized approach to update the order
-  // This reduces unnecessary re-renders
-  setOrders(prev => {
-    // Find the order to update first
-    const orderToUpdate = prev.find(order => order.id === orderId);
-    if (!orderToUpdate || orderToUpdate.status === status) {
-      // No change needed if order doesn't exist or status is the same
-      return prev;
-    }
-    
-    // Only map through the array if we need to make a change
-    return prev.map(order => 
-      order.id === orderId 
-        ? { 
-            ...order, 
-            status, 
-            updatedAt: new Date().toISOString() 
-          } 
-        : order
-    );
-  });
+  // Use our optimized batch update
+  setOrders(prev => optimizeBatchOrderUpdate(prev, orderId, status));
   
   const statusMessages = {
     'confirmed': 'Order confirmed by waiter',
@@ -106,16 +90,8 @@ export const handleUpdateOrderStatus = (
         const orderToComplete = prev.find(order => order.id === orderId && order.status === 'served');
         if (!orderToComplete) return prev;
         
-        // Only map through the array if needed
-        return prev.map(order => 
-          order.id === orderId 
-            ? { 
-                ...order, 
-                status: 'completed', 
-                updatedAt: new Date().toISOString() 
-              } 
-            : order
-        );
+        // Use our optimized batch update
+        return optimizeBatchOrderUpdate(prev, orderId, 'completed');
       });
       
       toast.success('Your order has been completed');

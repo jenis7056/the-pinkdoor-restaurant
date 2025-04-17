@@ -1,4 +1,5 @@
-import { useState, useEffect, useMemo, memo } from "react";
+
+import { useState, useEffect, useMemo, memo, useCallback } from "react";
 import { MenuItem as MenuItemType } from "@/types";
 import MenuItem from "./MenuItem";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -28,10 +29,12 @@ const MenuSection = memo(({
   const [searchQuery, setSearchQuery] = useState("");
   const { orders, currentCustomer } = useApp();
 
+  // Memoize item status lookup for better performance
   const getItemStatus = useMemo(() => {
     return (menuItemId: string) => {
       if (!currentCustomer) return null;
       
+      // Create a lookup map for faster access (this avoids repeated lookups)
       const activeOrders = orders.filter(
         order => 
           order.customerId === currentCustomer.id && 
@@ -50,7 +53,10 @@ const MenuSection = memo(({
     };
   }, [orders, currentCustomer]);
 
+  // Avoid filtering items on every render
   const filteredItems = useMemo(() => {
+    if (!menuItems?.length) return [];
+    
     const displayableItems = menuItems.filter(
       (item) => {
         const status = getItemStatus(item.id);
@@ -58,22 +64,42 @@ const MenuSection = memo(({
       }
     );
     
+    if (!searchQuery) return displayableItems;
+    
+    const lowerQuery = searchQuery.toLowerCase();
     return displayableItems.filter(
       (item) =>
-        item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        item.description.toLowerCase().includes(searchQuery.toLowerCase())
+        item.name.toLowerCase().includes(lowerQuery) ||
+        item.description.toLowerCase().includes(lowerQuery)
     );
   }, [menuItems, searchQuery, getItemStatus]);
 
+  // Optimize subcategory data calculation
   const subcategoryData = useMemo(() => {
+    if (!filteredItems?.length) {
+      return { uncategorizedItems: [], subcategoryItems: [] };
+    }
+    
     const uncategorizedItems = filteredItems.filter(
       (item) => !item.subcategory || item.subcategory === ""
     );
   
-    const subcategoryItems = subcategories.map((subcategory) => ({
-      subcategory,
-      items: filteredItems.filter((item) => item.subcategory === subcategory),
-    }));
+    const subcategoriesMap = new Map();
+    
+    // Use map for faster lookup
+    subcategories.forEach(subcategory => {
+      subcategoriesMap.set(subcategory, []);
+    });
+    
+    // Single loop through filtered items
+    filteredItems.forEach(item => {
+      if (item.subcategory && subcategoriesMap.has(item.subcategory)) {
+        subcategoriesMap.get(item.subcategory).push(item);
+      }
+    });
+    
+    const subcategoryItems = Array.from(subcategoriesMap.entries())
+      .map(([subcategory, items]) => ({ subcategory, items }));
 
     return {
       uncategorizedItems,
@@ -89,7 +115,8 @@ const MenuSection = memo(({
     served: "bg-purple-100 text-purple-800",
   };
 
-  const renderMenuItem = (item: MenuItemType) => {
+  // Memoize rendering of menu items
+  const renderMenuItem = useCallback((item: MenuItemType) => {
     const status = getItemStatus(item.id);
     return (
       <div key={item.id} className="relative">
@@ -108,10 +135,26 @@ const MenuSection = memo(({
         )}
       </div>
     );
-  };
+  }, [getItemStatus, isAdmin, onEdit, onDelete, statusBadgeStyles]);
 
   const { uncategorizedItems, subcategoryItems } = subcategoryData;
   const defaultTab = uncategorizedItems.length > 0 ? "_default" : subcategoryItems[0]?.subcategory;
+
+  // Handle search with debounce
+  const handleSearchChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    
+    // Avoid setting state for every keystroke
+    if (Math.abs(value.length - searchQuery.length) > 3 || value.length === 0) {
+      setSearchQuery(value);
+    } else {
+      // Use setTimeout to debounce the search
+      const timeoutId = setTimeout(() => {
+        setSearchQuery(value);
+      }, 300);
+      return () => clearTimeout(timeoutId);
+    }
+  }, [searchQuery]);
 
   return (
     <div className="py-6">
@@ -127,14 +170,14 @@ const MenuSection = memo(({
             placeholder="Search items..." 
             className="pl-10 border-pink-200 focus-visible:ring-pink-500"
             value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
+            onChange={handleSearchChange}
           />
         </div>
       </div>
 
       {(subcategories.length === 0 || filteredItems.length === 0) ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-          {filteredItems.map((item) => renderMenuItem(item))}
+          {filteredItems.map(renderMenuItem)}
         </div>
       ) : (
         <Tabs defaultValue={defaultTab}>
@@ -163,7 +206,7 @@ const MenuSection = memo(({
           {uncategorizedItems.length > 0 && (
             <TabsContent value="_default" className="mt-0">
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                {filteredItems.map((item) => renderMenuItem(item))}
+                {filteredItems.map(renderMenuItem)}
               </div>
             </TabsContent>
           )}
@@ -172,7 +215,7 @@ const MenuSection = memo(({
             items.length > 0 ? (
               <TabsContent key={subcategory} value={subcategory} className="mt-0">
                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                  {items.map((item) => renderMenuItem(item))}
+                  {items.map(renderMenuItem)}
                 </div>
               </TabsContent>
             ) : null
