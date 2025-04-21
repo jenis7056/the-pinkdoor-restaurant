@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { ArrowLeft, Search, ShoppingBag } from "lucide-react";
 import { OrderStatus } from "@/types";
 import { optimizeFilter, computeCache, markOrderProcessing, isOrderProcessing } from "@/contexts/orderOptimizer";
-import { preventRapidClicks } from "@/lib/performance";
+import { preventRapidClicks, createPriorityClickHandler } from "@/lib/performance";
 
 const AdminOrders = () => {
   const [activeTab, setActiveTab] = useState<OrderStatus | "all" | "active">("active");
@@ -21,7 +21,6 @@ const AdminOrders = () => {
   const lastUpdateTimeRef = useRef<Record<string, number>>({});
   const orderUpdateRequestsRef = useRef<Record<string, number>>({});
   
-  // Redirect if not logged in as admin
   useEffect(() => {
     if (!currentUser || currentUser.role !== "admin") {
       navigate("/login");
@@ -29,13 +28,10 @@ const AdminOrders = () => {
     }
   }, [currentUser, navigate]);
 
-  // Custom equality check for orders array to prevent unnecessary re-renders
   const stableOrders = useMemo(() => {
-    // Only update reference if orders have actually changed in a meaningful way
     const hasChanged = orders.length !== prevOrdersRef.current.length || 
       orders.some((order, idx) => {
         const prevOrder = prevOrdersRef.current[idx];
-        // If the order is new or status has changed
         return !prevOrder || order.status !== prevOrder.status || order.id !== prevOrder.id;
       });
     
@@ -46,7 +42,6 @@ const AdminOrders = () => {
     return prevOrdersRef.current;
   }, [orders]);
 
-  // Cache filter results for better performance
   const getFilteredOrders = useCallback((query: string, ordersList: typeof orders) => {
     if (query.length === 0) return ordersList;
     
@@ -60,17 +55,15 @@ const AdminOrders = () => {
       order.tableNumber.toString().includes(query)
     );
     
-    computeCache.set(cacheKey, result, 3000); // Cache for 3 seconds
+    computeCache.set(cacheKey, result, 3000);
     return result;
   }, []);
 
-  // Memoize filtered orders with cache
   const filteredOrders = useMemo(() => 
     getFilteredOrders(searchQuery, stableOrders),
     [searchQuery, stableOrders, getFilteredOrders]
   );
 
-  // Memoize orders filtered by status using useCallback and cache results
   const getOrdersByStatus = useCallback((status: string, filtered: typeof orders) => {
     const cacheKey = `admin_status_${status}_${filtered.length}`;
     const cached = computeCache.get<typeof orders>(cacheKey);
@@ -85,7 +78,7 @@ const AdminOrders = () => {
       result = optimizeFilter(filtered, order => order.status === status);
     }
     
-    computeCache.set(cacheKey, result, 2000); // Cache for 2 seconds
+    computeCache.set(cacheKey, result, 2000);
     return result;
   }, []);
 
@@ -94,10 +87,8 @@ const AdminOrders = () => {
     [activeTab, filteredOrders, getOrdersByStatus]
   );
   
-  // Cleanup any potential memory leaks on unmount
   useEffect(() => {
     return () => {
-      // Clear all processing state on unmount
       Object.keys(lastUpdateTimeRef.current).forEach((orderId) => {
         delete lastUpdateTimeRef.current[orderId];
       });
@@ -108,57 +99,61 @@ const AdminOrders = () => {
     };
   }, []);
 
-  // Enhanced update handler with additional safeguards against double-clicks
   const handleUpdateStatus = useCallback((orderId: string, status: OrderStatus) => {
-    // Create a unique key for this specific update request
+    if (status === 'completed') {
+      const priorityHandler = createPriorityClickHandler(
+        () => performStatusUpdate(orderId, status),
+        `priority-${orderId}-${status}`
+      );
+      return priorityHandler();
+    }
+    
     const requestKey = `${orderId}-${status}-${Date.now()}`;
     
-    // Ensure we don't process clicks too rapidly
     if (!preventRapidClicks(requestKey, 2000)) {
       console.log(`Blocking rapid click update for ${orderId} to ${status}`);
       return;
     }
     
-    // Check for global processing state with detailed logging
+    performStatusUpdate(orderId, status);
+  }, [updateOrderStatus]);
+  
+  const performStatusUpdate = useCallback((orderId: string, status: OrderStatus) => {
     if (isOrderProcessing(orderId)) {
       console.log(`Order ${orderId} is already being processed globally`);
       return; 
     }
     
-    // Check for local processing state
     if (processingOrders.has(orderId)) {
       console.log(`Order ${orderId} is already being processed locally`);
       return; 
     }
     
-    // Check for time-based throttling (15 second minimum between updates to same order)
+    const cooldownTime = status === 'completed' ? 5000 : 15000;
+    
     const now = Date.now();
     const lastUpdateTime = lastUpdateTimeRef.current[orderId] || 0;
-    if (now - lastUpdateTime < 15000) {
+    if (now - lastUpdateTime < cooldownTime) {
       console.log(`Throttling update for ${orderId}: too soon after last update`);
       return;
     }
     
-    // Record that we're handling this request and track times
+    const requestKey = `${orderId}-${status}-${now}`;
     orderUpdateRequestsRef.current[requestKey] = now;
     lastUpdateTimeRef.current[orderId] = now;
     
     console.log(`Processing order status update: ${orderId} to ${status}`);
     
-    // Set processing state to prevent duplicate clicks
     setProcessingOrders(prev => {
       const newSet = new Set(prev);
       newSet.add(orderId);
       return newSet;
     });
     
-    // Mark order as processing globally
-    markOrderProcessing(orderId, 15000); // 15 seconds cooldown
+    markOrderProcessing(orderId, cooldownTime);
     
-    // Make the status update
     updateOrderStatus(orderId, status);
     
-    // Reset processing state after a timeout
     setTimeout(() => {
       setProcessingOrders(prev => {
         const newSet = new Set(prev);
@@ -166,18 +161,15 @@ const AdminOrders = () => {
         return newSet;
       });
       
-      // Clean up the request tracking
       delete orderUpdateRequestsRef.current[requestKey];
-    }, 15000); // 15 second global cooldown
+    }, cooldownTime);
   }, [updateOrderStatus, processingOrders]);
 
   const handleTabChange = useCallback((value: string) => {
-    // Safe to call without throttling - UI state change only
     setActiveTab(value as OrderStatus | "all" | "active");
   }, []);
 
   const handleSearchChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    // Safe to call without throttling - UI state change only
     setSearchQuery(e.target.value);
   }, []);
 

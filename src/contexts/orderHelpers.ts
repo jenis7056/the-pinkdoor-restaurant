@@ -138,7 +138,7 @@ export const handleUpdateOrderStatus = (
   const updateKey = `update-${orderId}-${status}-${Date.now()}`;
   
   // Prevent duplicate updates with status-specific throttling
-  if (!preventDuplicateOperation(updateKey, 2000)) {
+  if (!preventDuplicateOperation(updateKey, 1000)) { // Reduced from 2000ms to 1000ms
     console.log(`Prevented duplicate status update for ${orderId}`);
     return;
   }
@@ -149,8 +149,11 @@ export const handleUpdateOrderStatus = (
     return;
   }
   
+  // For completed status, use shorter processing time to improve responsiveness
+  const processingTime = status === 'completed' ? 1500 : 3000;
+  
   // Mark this order as being processed to prevent multiple updates
-  markOrderProcessing(orderId, 3000); // Prevent clicks for 3 seconds (reduced from 5s)
+  markOrderProcessing(orderId, processingTime);
   
   // Check cache first - don't perform the same update multiple times in a short period
   const cacheKey = `order_update_${orderId}_${status}`;
@@ -159,76 +162,101 @@ export const handleUpdateOrderStatus = (
     return;
   }
   
-  computeCache.set(cacheKey, true, 2000); // Cache for 2 seconds to prevent rapid clicks
+  // Use shorter cache time for completed status
+  const cacheTime = status === 'completed' ? 1000 : 2000;
+  computeCache.set(cacheKey, true, cacheTime);
   
   // Show visual feedback immediately with a unique ID to prevent duplicate toasts
   const toastId = `toast-${orderId}-${status}-${Date.now()}`;
-  toast.loading(`Updating order to ${status}...`, {
-    id: toastId,
-    duration: 2000
-  });
+  
+  // For completed status, skip loading toast to improve performance
+  if (status !== 'completed') {
+    toast.loading(`Updating order to ${status}...`, {
+      id: toastId,
+      duration: 2000
+    });
+  }
   
   // First, check if the order exists in the persistent store
   const storedOrder = persistentOrderStore.getOrder(orderId);
   
-  // Perform the update immediately to improve responsiveness
-  setOrders(prev => {
-    // Recover the order from persistent store if it's missing from state
-    if (!prev.some(o => o.id === orderId) && storedOrder) {
-      console.log(`Recovered order ${orderId} from persistent store`);
-      prev = [...prev, storedOrder];
-    }
-    
-    const order = prev.find(o => o.id === orderId);
-    if (!order) {
-      console.error(`Order ${orderId} not found`);
-      return prev;
-    }
-    
-    // Skip update if the status is already set (idempotent operation)
-    if (order.status === status) {
-      console.log(`Order ${orderId} already has status ${status}, skipping update`);
-      return prev;
-    }
-    
-    // Verify the status change is valid in the workflow
-    const statusFlow: OrderStatus[] = ["pending", "confirmed", "preparing", "ready", "served", "completed"];
-    const currentIndex = statusFlow.indexOf(order.status);
-    const newIndex = statusFlow.indexOf(status);
-    
-    if (newIndex <= currentIndex && status !== 'completed') {
-      console.error(`Invalid status change from ${order.status} to ${status}`);
-      return prev;
-    }
-    
-    console.log(`Valid status change from ${order.status} to ${status} for order ${orderId}`);
-    
-    // Use optimized batch update
-    const updatedOrders = optimizeBatchOrderUpdate(prev, orderId, status);
-    
-    // Update the persistent store with the new order state
-    const updatedOrder = updatedOrders.find(o => o.id === orderId);
-    if (updatedOrder) {
-      persistentOrderStore.setOrder(updatedOrder);
-    }
-    
-    return updatedOrders;
-  });
-  
-  // Show toast notification after a small delay, but don't block the main thread
-  setTimeout(() => {
-    const statusMessages = {
-      'confirmed': 'Order confirmed by waiter',
-      'preparing': 'Chef has started preparing your order',
-      'ready': 'Your order is ready to be served',
-      'served': 'Your order has been served',
-      'completed': 'Order completed',
-    };
-    
-    toast.success(statusMessages[status] || `Order status updated to ${status}`, {
-      id: toastId,
+  // Optimize state updates by using a callback function
+  const updateOrdersState = () => {
+    // Perform the update immediately to improve responsiveness
+    setOrders(prev => {
+      // Recover the order from persistent store if it's missing from state
+      if (!prev.some(o => o.id === orderId) && storedOrder) {
+        console.log(`Recovered order ${orderId} from persistent store`);
+        prev = [...prev, storedOrder];
+      }
+      
+      const order = prev.find(o => o.id === orderId);
+      if (!order) {
+        console.error(`Order ${orderId} not found`);
+        return prev;
+      }
+      
+      // Skip update if the status is already set (idempotent operation)
+      if (order.status === status) {
+        console.log(`Order ${orderId} already has status ${status}, skipping update`);
+        return prev;
+      }
+      
+      // Verify the status change is valid in the workflow
+      const statusFlow: OrderStatus[] = ["pending", "confirmed", "preparing", "ready", "served", "completed"];
+      const currentIndex = statusFlow.indexOf(order.status);
+      const newIndex = statusFlow.indexOf(status);
+      
+      if (newIndex <= currentIndex && status !== 'completed') {
+        console.error(`Invalid status change from ${order.status} to ${status}`);
+        return prev;
+      }
+      
+      console.log(`Valid status change from ${order.status} to ${status} for order ${orderId}`);
+      
+      // Use optimized batch update
+      const updatedOrders = optimizeBatchOrderUpdate(prev, orderId, status);
+      
+      // Update the persistent store with the new order state
+      const updatedOrder = updatedOrders.find(o => o.id === orderId);
+      if (updatedOrder) {
+        persistentOrderStore.setOrder(updatedOrder);
+      }
+      
+      return updatedOrders;
     });
-  }, 500);
+  };
+  
+  // Execute state update with optimized timing
+  if (status === 'completed') {
+    // For completed status, use immediate update for better responsiveness
+    updateOrdersState();
+    
+    // Show success toast after state has been updated
+    setTimeout(() => {
+      toast.success('Order completed successfully', {
+        id: toastId,
+      });
+    }, 100);
+  } else {
+    // For other statuses, use small delay to ensure UI responsiveness
+    updateOrdersState();
+    
+    // Show toast notification after a small delay, but don't block the main thread
+    setTimeout(() => {
+      const statusMessages = {
+        'confirmed': 'Order confirmed by waiter',
+        'preparing': 'Chef has started preparing your order',
+        'ready': 'Your order is ready to be served',
+        'served': 'Your order has been served',
+        'completed': 'Order completed',
+      };
+      
+      toast.success(statusMessages[status] || `Order status updated to ${status}`, {
+        id: toastId,
+      });
+    }, 500);
+  }
   
   // Only auto-complete served orders if they're not already completed
   // and when they were served more than 1 minute ago
@@ -269,13 +297,13 @@ export const handleUpdateOrderStatus = (
     
     // Only trigger the auto-logout if this is NOT a customer action
     if (!isCustomerAction) {
-      // Add a larger delay before logout to prevent UI issues
+      // Use shorter delay for logout to improve responsiveness
       setTimeout(() => {
         setCurrentCustomer(null);
         toast.success('Thank you for dining with us!', {
           id: `logout-${orderId}`,
         });
-      }, 2000);
+      }, 1000); // Reduced from 2000ms
     }
   }
 };

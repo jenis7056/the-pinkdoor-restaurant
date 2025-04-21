@@ -47,6 +47,19 @@ export function createStableClickHandler<T extends (...args: any[]) => any>(
 }
 
 /**
+ * High-priority click handler with reduced cooldown for critical operations
+ * @param handler Event handler function
+ * @param id Unique identifier for the handler
+ */
+export function createPriorityClickHandler<T extends (...args: any[]) => any>(
+  handler: T,
+  id: string
+): (...args: Parameters<T>) => void {
+  // Use shorter cooldown (500ms) for priority operations like "Mark as completed"
+  return createStableClickHandler(handler, id, 500);
+}
+
+/**
  * Clear all stored click timings (use for cleanup)
  */
 export function clearClickTracker(): void {
@@ -78,3 +91,33 @@ export const createPermanentClickHandler = <T extends (...args: any[]) => any>(
   const handlerId = `${componentId}-${actionName}`;
   return createStableClickHandler(handler, handlerId, cooldownMs);
 };
+
+// Optimize object creation by caching handlers
+const handlerCache = new Map<string, Function>();
+
+/**
+ * Get or create a cached handler to prevent unnecessary recreations
+ */
+export function getOrCreateHandler<T extends Function>(
+  key: string,
+  createFn: () => T
+): T {
+  if (!handlerCache.has(key)) {
+    handlerCache.set(key, createFn());
+  }
+  return handlerCache.get(key) as T;
+}
+
+/**
+ * Clear specific handler from cache
+ */
+export function clearCachedHandler(key: string): void {
+  handlerCache.delete(key);
+}
+
+/**
+ * Clear all cached handlers
+ */
+export function clearAllCachedHandlers(): void {
+  handlerCache.clear();
+}
