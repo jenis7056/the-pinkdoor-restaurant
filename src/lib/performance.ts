@@ -55,8 +55,21 @@ export function createPriorityClickHandler<T extends (...args: any[]) => any>(
   handler: T,
   id: string
 ): (...args: Parameters<T>) => void {
-  // Use shorter cooldown (500ms) for priority operations like "Mark as completed"
-  return createStableClickHandler(handler, id, 500);
+  // Use shorter cooldown (300ms) for priority operations
+  return createStableClickHandler(handler, id, 300);
+}
+
+/**
+ * Super-priority click handler with minimal cooldown for UI interactions
+ * @param handler Event handler function
+ * @param id Unique identifier for the handler
+ */
+export function createUIPriorityClickHandler<T extends (...args: any[]) => any>(
+  handler: T,
+  id: string
+): (...args: Parameters<T>) => void {
+  // Use very short cooldown (100ms) for UI operations like "Mark as served"
+  return createStableClickHandler(handler, id, 100);
 }
 
 /**

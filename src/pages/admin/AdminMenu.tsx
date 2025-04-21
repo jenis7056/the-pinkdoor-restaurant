@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import Layout from "@/components/Layout";
@@ -21,6 +22,7 @@ import {
 import { ArrowLeft, Plus } from "lucide-react";
 import { toast } from "sonner";
 import { MenuItem } from "@/types";
+import { preventRapidClicks } from "@/lib/performance";
 
 const AdminMenu = () => {
   const navigate = useNavigate();
@@ -38,7 +40,6 @@ const AdminMenu = () => {
     isSpecial: false,
   });
   const [editingItemId, setEditingItemId] = useState<string | null>(null);
-  const [isDialogAnimating, setIsDialogAnimating] = useState(false);
   
   useEffect(() => {
     if (!currentUser || currentUser.role !== "admin") {
@@ -62,27 +63,31 @@ const AdminMenu = () => {
     setFormData((prev) => ({ ...prev, isSpecial: checked }));
   };
 
-  const safeCloseAddDialog = () => {
-    if (isDialogAnimating) return;
-    
-    setIsDialogAnimating(true);
-    setTimeout(() => {
-      setIsAddDialogOpen(false);
-      setIsDialogAnimating(false);
-    }, 100);
+  // Simplified dialog open/close without animations that could cause white screen
+  const handleOpenAddDialog = () => {
+    setFormData({
+      name: "",
+      price: 0,
+      description: "",
+      category: categories[0]?.name || "",
+      subcategory: "",
+      isSpecial: false,
+    });
+    setIsAddDialogOpen(true);
   };
   
-  const safeCloseEditDialog = () => {
-    if (isDialogAnimating) return;
-    
-    setIsDialogAnimating(true);
-    setTimeout(() => {
-      setIsEditDialogOpen(false);
-      setIsDialogAnimating(false);
-    }, 100);
+  const handleCloseAddDialog = () => {
+    setIsAddDialogOpen(false);
+  };
+  
+  const handleCloseEditDialog = () => {
+    setIsEditDialogOpen(false);
   };
 
   const handleAddItem = () => {
+    // Prevent duplicate submissions
+    if (!preventRapidClicks('add-menu-item', 1000)) return;
+    
     if (!formData.name || !formData.description || !formData.category || formData.price <= 0) {
       toast.error("Please fill all required fields");
       return;
@@ -97,10 +102,13 @@ const AdminMenu = () => {
       subcategory: "",
       isSpecial: false,
     });
-    safeCloseAddDialog();
+    handleCloseAddDialog();
   };
 
   const handleOpenEditDialog = (itemId: string) => {
+    // Prevent rapid clicks
+    if (!preventRapidClicks(`edit-menu-item-${itemId}`, 500)) return;
+    
     const item = menuItems.find((item) => item.id === itemId);
     if (item) {
       setFormData({
@@ -112,14 +120,14 @@ const AdminMenu = () => {
         isSpecial: item.isSpecial || false,
       });
       setEditingItemId(itemId);
-      
-      setTimeout(() => {
-        setIsEditDialogOpen(true);
-      }, 10);
+      setIsEditDialogOpen(true);
     }
   };
 
   const handleEditItem = () => {
+    // Prevent duplicate submissions
+    if (!preventRapidClicks('edit-menu-item-submit', 1000)) return;
+    
     if (!editingItemId) return;
     
     if (!formData.name || !formData.description || !formData.category || formData.price <= 0) {
@@ -137,10 +145,12 @@ const AdminMenu = () => {
       isSpecial: false,
     });
     setEditingItemId(null);
-    safeCloseEditDialog();
+    handleCloseEditDialog();
   };
 
   const handleDeleteItem = (itemId: string) => {
+    // Prevent rapid clicks
+    if (!preventRapidClicks(`delete-menu-item-${itemId}`, 1000)) return;
     deleteMenuItem(itemId);
   };
 
@@ -172,19 +182,7 @@ const AdminMenu = () => {
           
           <Button 
             className="mt-4 md:mt-0 bg-pink-700 hover:bg-pink-800"
-            onClick={() => {
-              setFormData({
-                name: "",
-                price: 0,
-                description: "",
-                category: categories[0]?.name || "",
-                subcategory: "",
-                isSpecial: false,
-              });
-              setTimeout(() => {
-                setIsAddDialogOpen(true);
-              }, 10);
-            }}
+            onClick={handleOpenAddDialog}
           >
             <Plus className="mr-2 h-5 w-5" />
             Add New Item
@@ -218,12 +216,10 @@ const AdminMenu = () => {
           ))}
         </Tabs>
 
+        {/* Simplified Add Dialog without animations */}
         <Dialog 
-          key={`add-dialog-${isAddDialogOpen ? 'open' : 'closed'}`}
           open={isAddDialogOpen} 
-          onOpenChange={(open) => {
-            if (!open) safeCloseAddDialog();
-          }}
+          onOpenChange={setIsAddDialogOpen}
         >
           <DialogContent className="sm:max-w-lg">
             <DialogHeader>
@@ -340,15 +336,13 @@ const AdminMenu = () => {
             <DialogFooter>
               <Button 
                 variant="outline" 
-                onClick={safeCloseAddDialog}
-                disabled={isDialogAnimating}
+                onClick={handleCloseAddDialog}
               >
                 Cancel
               </Button>
               <Button 
                 onClick={handleAddItem} 
                 className="bg-pink-700 hover:bg-pink-800"
-                disabled={isDialogAnimating}
               >
                 Add Item
               </Button>
@@ -356,12 +350,10 @@ const AdminMenu = () => {
           </DialogContent>
         </Dialog>
 
+        {/* Simplified Edit Dialog without animations */}
         <Dialog 
-          key={`edit-dialog-${isEditDialogOpen ? 'open' : 'closed'}-${editingItemId}`}
           open={isEditDialogOpen} 
-          onOpenChange={(open) => {
-            if (!open) safeCloseEditDialog();
-          }}
+          onOpenChange={setIsEditDialogOpen}
         >
           <DialogContent className="sm:max-w-lg">
             <DialogHeader>
@@ -478,15 +470,13 @@ const AdminMenu = () => {
             <DialogFooter>
               <Button 
                 variant="outline" 
-                onClick={safeCloseEditDialog}
-                disabled={isDialogAnimating}
+                onClick={handleCloseEditDialog}
               >
                 Cancel
               </Button>
               <Button 
                 onClick={handleEditItem} 
                 className="bg-pink-700 hover:bg-pink-800"
-                disabled={isDialogAnimating}
               >
                 Save Changes
               </Button>

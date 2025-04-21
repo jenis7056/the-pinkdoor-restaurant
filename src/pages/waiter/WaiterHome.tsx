@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useMemo, useCallback, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import Layout from "@/components/Layout";
@@ -9,6 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Search, ShoppingBag } from "lucide-react";
 import { OrderStatus } from "@/types";
 import { optimizeFilter, computeCache } from "@/contexts/orderOptimizer";
+import { preventRapidClicks, createUIPriorityClickHandler } from "@/lib/performance";
 
 const WaiterHome = () => {
   const [activeTab, setActiveTab] = useState<"pending" | "ready" | "all">("pending");
@@ -93,13 +95,43 @@ const WaiterHome = () => {
     [activeTab, filteredOrders, getOrdersByStatus]
   );
 
-  // Improved update handler with debounce protection
+  // Improved update handler with optimized UI priority for waiter actions
   const handleUpdateStatus = useCallback((orderId: string, status: OrderStatus) => {
     // Prevent duplicate updates
     if (processingOrders.has(orderId)) {
       return;
     }
     
+    // For "served" status, use the UI priority handler for faster response
+    if (status === "served") {
+      const uiPriorityHandler = createUIPriorityClickHandler(
+        () => {
+          // Set processing state to prevent duplicate clicks
+          setProcessingOrders(prev => {
+            const newSet = new Set(prev);
+            newSet.add(orderId);
+            return newSet;
+          });
+          
+          // Update status immediately for better UI responsiveness
+          updateOrderStatus(orderId, status);
+          
+          // Reset processing state after a shorter timeout for "served" status
+          setTimeout(() => {
+            setProcessingOrders(prev => {
+              const newSet = new Set(prev);
+              newSet.delete(orderId);
+              return newSet;
+            });
+          }, 1000); // Shorter cooldown for UI operations
+        },
+        `serve-${orderId}`
+      );
+      
+      return uiPriorityHandler();
+    }
+    
+    // For other statuses, use the normal flow
     // Set processing state to prevent duplicate clicks
     setProcessingOrders(prev => {
       const newSet = new Set(prev);
