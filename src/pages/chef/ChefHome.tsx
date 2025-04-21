@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useMemo, useCallback, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import Layout from "@/components/Layout";
@@ -9,7 +8,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import { Search, ShoppingBag } from "lucide-react";
 import { OrderStatus } from "@/types";
-import { optimizeFilter, throttle, computeCache } from "@/contexts/orderOptimizer";
+import { optimizeFilter, computeCache } from "@/contexts/orderOptimizer";
 
 const ChefHome = () => {
   const [activeTab, setActiveTab] = useState<"confirmed" | "preparing" | "all">("confirmed");
@@ -17,6 +16,7 @@ const ChefHome = () => {
   const navigate = useNavigate();
   const { orders, updateOrderStatus, currentUser } = useApp();
   const prevOrdersRef = useRef(orders);
+  const [processingOrders, setProcessingOrders] = useState<Set<string>>(new Set());
   
   // Redirect if not logged in as chef
   useEffect(() => {
@@ -94,10 +94,32 @@ const ChefHome = () => {
     [activeTab, filteredOrders, getOrdersByStatus]
   );
 
-  // Throttle the handler to prevent UI freezes on rapid clicks
-  const handleUpdateStatus = useCallback(throttle((orderId: string, status: OrderStatus) => {
+  // Improved update handler with debounce protection
+  const handleUpdateStatus = useCallback((orderId: string, status: OrderStatus) => {
+    // Prevent duplicate updates
+    if (processingOrders.has(orderId)) {
+      return;
+    }
+    
+    // Set processing state to prevent duplicate clicks
+    setProcessingOrders(prev => {
+      const newSet = new Set(prev);
+      newSet.add(orderId);
+      return newSet;
+    });
+    
+    // Call the update function
     updateOrderStatus(orderId, status);
-  }, 1000), [updateOrderStatus]);
+    
+    // Reset processing state after a timeout
+    setTimeout(() => {
+      setProcessingOrders(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(orderId);
+        return newSet;
+      });
+    }, 5000); // 5 second cooldown
+  }, [updateOrderStatus, processingOrders]);
 
   const handleTabChange = useCallback((val: string) => {
     setActiveTab(val as "confirmed" | "preparing" | "all");

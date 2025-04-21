@@ -61,8 +61,8 @@ export const handleCancelOrder = (
   toast.success('Order cancelled successfully');
 };
 
-// High performance order status update - increased throttle to prevent UI freezes
-export const handleUpdateOrderStatus = throttle((
+// High performance order status update with improved reliability
+export const handleUpdateOrderStatus = (
   orderId: string, 
   status: OrderStatus,
   setOrders: React.Dispatch<React.SetStateAction<Order[]>>,
@@ -76,19 +76,13 @@ export const handleUpdateOrderStatus = throttle((
     console.log("Skipping duplicate update (cached):", orderId, status);
     return;
   }
-  computeCache.set(cacheKey, true, 1000); // Cache for 1 second
+  computeCache.set(cacheKey, true, 2000); // Cache for 2 seconds to prevent rapid clicks
   
-  // Optimize state updates by using our optimized batch update
-  // Use a normal function instead of immediately updating state
-  const updateOrderInState = () => {
-    setOrders(prev => optimizeBatchOrderUpdate(prev, orderId, status));
-  };
-  
-  // Schedule the update with requestAnimationFrame for better performance
-  requestAnimationFrame(updateOrderInState);
-  
-  // Show toast notification without blocking the main thread
+  // Perform the update immediately to improve responsiveness
   setTimeout(() => {
+    setOrders(prev => optimizeBatchOrderUpdate(prev, orderId, status));
+    
+    // Show toast notification without blocking the main thread
     const statusMessages = {
       'confirmed': 'Order confirmed by waiter',
       'preparing': 'Chef has started preparing your order',
@@ -98,44 +92,38 @@ export const handleUpdateOrderStatus = throttle((
     };
     
     toast.success(statusMessages[status] || `Order status updated to ${status}`);
-  }, 100);
-  
-  // Debounce the auto-completion of orders to reduce unnecessary re-renders
-  if (status === 'served') {
-    const completeOrderAfterServed = debounce((id: string) => {
-      setOrders(prev => {
-        // First check if the order still exists and is still in served status
-        const orderIndex = prev.findIndex(order => order.id === id && order.status === 'served');
-        if (orderIndex === -1) return prev;
+    
+    // Handle auto-completion of orders
+    if (status === 'served') {
+      // Auto-complete orders after they've been served for a while (60 seconds)
+      setTimeout(() => {
+        setOrders(prev => {
+          // First check if the order still exists and is still in served status
+          const orderIndex = prev.findIndex(order => order.id === orderId && order.status === 'served');
+          if (orderIndex === -1) return prev;
+          
+          // Use optimized batch update
+          console.log(`Auto-completing served order ${orderId}`);
+          return optimizeBatchOrderUpdate(prev, orderId, 'completed');
+        });
         
-        // Use optimized batch update
-        return optimizeBatchOrderUpdate(prev, id, 'completed');
-      });
-      
-      toast.success('Your order has been completed');
-    }, 500);
-    
-    // Auto-complete orders after they've been served for a while (60 seconds)
-    setTimeout(() => {
-      completeOrderAfterServed(orderId);
-    }, 60000); // 60 seconds
-  }
-  
-  // Only logout customer when admin manually completes the order from admin panel
-  // Do NOT auto-logout when a customer confirms their own order
-  if (status === 'completed' && setCurrentCustomer) {
-    // Check if this is an admin/staff action or a customer action
-    const isCustomerAction = document.location.pathname.includes('/customer');
-    
-    // Only trigger the auto-logout if this is NOT a customer action
-    if (!isCustomerAction) {
-      // Add a larger delay before logout to prevent UI issues
-      const logoutCustomer = debounce(() => {
-        setCurrentCustomer(null);
-        toast.success('Thank you for dining with us!');
-      }, 500);
-      
-      setTimeout(logoutCustomer, 2000);
+        toast.success('Your order has been completed');
+      }, 60000); // 60 seconds
     }
-  }
-}, 1000); // Increased from 500ms to 1000ms for better performance
+    
+    // Only logout customer when admin manually completes the order from admin panel
+    if (status === 'completed' && setCurrentCustomer) {
+      // Check if this is an admin/staff action or a customer action
+      const isCustomerAction = document.location.pathname.includes('/customer');
+      
+      // Only trigger the auto-logout if this is NOT a customer action
+      if (!isCustomerAction) {
+        // Add a larger delay before logout to prevent UI issues
+        setTimeout(() => {
+          setCurrentCustomer(null);
+          toast.success('Thank you for dining with us!');
+        }, 2000);
+      }
+    }
+  }, 0);
+};

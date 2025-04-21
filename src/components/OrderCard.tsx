@@ -1,4 +1,5 @@
-import { useState, useCallback, memo } from "react";
+
+import { useState, useCallback, memo, useRef, useEffect } from "react";
 import { Order, OrderItem, OrderStatus, UserRole } from "@/types";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -30,6 +31,8 @@ interface OrderCardProps {
 const OrderCard = memo(({ order, userRole, updateStatus }: OrderCardProps) => {
   const { orders, setOrders } = useApp();
   const [showDetails, setShowDetails] = useState(false);
+  const [isProcessing, setIsProcessing] = useState(false);
+  const processingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const statusIcons = {
     pending: <CircleDashed className="h-5 w-5 mr-2" />,
@@ -137,6 +140,33 @@ const OrderCard = memo(({ order, userRole, updateStatus }: OrderCardProps) => {
     toast.success("Item removed from order");
   }, [order.id, order.status, setOrders]);
 
+  const handleStatusUpdate = useCallback(() => {
+    // Prevent multiple clicks
+    if (isProcessing) return;
+    
+    const nextStatus = getNextStatus();
+    if (!nextStatus || !updateStatus) return;
+    
+    if (canUpdateStatus(userRole, order.status, nextStatus)) {
+      setIsProcessing(true);
+      
+      // Visual feedback that button was clicked
+      toast.loading(`Updating order to ${nextStatus}...`);
+      
+      // Call the update function
+      updateStatus(order.id, nextStatus);
+      
+      // Reset processing state after a delay to prevent multiple clicks
+      if (processingTimeoutRef.current) {
+        clearTimeout(processingTimeoutRef.current);
+      }
+      
+      processingTimeoutRef.current = setTimeout(() => {
+        setIsProcessing(false);
+      }, 3000); // 3 second cooldown
+    }
+  }, [isProcessing, getNextStatus, canUpdateStatus, userRole, order.status, order.id, updateStatus]);
+
   const renderStatusButton = useCallback(() => {
     const nextStatus = getNextStatus();
     if (!nextStatus || !updateStatus) return null;
@@ -144,15 +174,16 @@ const OrderCard = memo(({ order, userRole, updateStatus }: OrderCardProps) => {
     if (canUpdateStatus(userRole, order.status, nextStatus)) {
       return (
         <Button 
-          onClick={() => updateStatus(order.id, nextStatus)}
-          className="bg-pink-700 hover:bg-pink-800 text-white"
+          onClick={handleStatusUpdate}
+          className={`bg-pink-700 hover:bg-pink-800 text-white ${isProcessing ? 'opacity-70 cursor-not-allowed' : ''}`}
+          disabled={isProcessing}
         >
-          Mark as {nextStatus.charAt(0).toUpperCase() + nextStatus.slice(1)}
+          {isProcessing ? 'Processing...' : `Mark as ${nextStatus.charAt(0).toUpperCase() + nextStatus.slice(1)}`}
         </Button>
       );
     }
     return null;
-  }, [userRole, order.id, order.status, getNextStatus, canUpdateStatus, updateStatus]);
+  }, [userRole, order.id, order.status, getNextStatus, canUpdateStatus, updateStatus, handleStatusUpdate, isProcessing]);
 
   const totalAmount = new Intl.NumberFormat("en-IN", {
     style: "currency",
@@ -168,6 +199,15 @@ const OrderCard = memo(({ order, userRole, updateStatus }: OrderCardProps) => {
 
   const toggleDetails = useCallback(() => {
     setShowDetails(prev => !prev);
+  }, []);
+
+  // Clean up timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (processingTimeoutRef.current) {
+        clearTimeout(processingTimeoutRef.current);
+      }
+    };
   }, []);
 
   return (

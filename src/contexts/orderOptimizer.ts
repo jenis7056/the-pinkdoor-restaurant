@@ -69,27 +69,26 @@ export const debounce = <T extends (...args: any[]) => any>(callback: T, delay =
  * @param limit Time limit in milliseconds
  */
 export const throttle = <T extends (...args: any[]) => any>(callback: T, limit = 300): ((...args: Parameters<T>) => void) => {
-  let waiting = false;
-  let lastArgs: Parameters<T> | null = null;
-  let lastThis: any = null;
-  
-  const timeoutFunction = function(this: any) {
-    waiting = false;
-    if (lastArgs) {
-      callback.apply(lastThis, lastArgs);
-      lastArgs = null;
-      lastThis = null;
-    }
-  };
+  let inThrottle = false;
+  let lastFunc: ReturnType<typeof setTimeout>;
+  let lastRan: number;
   
   return function(this: any, ...args: Parameters<T>) {
-    if (!waiting) {
+    if (!inThrottle) {
       callback.apply(this, args);
-      waiting = true;
-      setTimeout(timeoutFunction, limit);
+      lastRan = Date.now();
+      inThrottle = true;
+      setTimeout(() => {
+        inThrottle = false;
+      }, limit);
     } else {
-      lastArgs = args;
-      lastThis = this;
+      clearTimeout(lastFunc);
+      lastFunc = setTimeout(() => {
+        if (Date.now() - lastRan >= limit) {
+          callback.apply(this, args);
+          lastRan = Date.now();
+        }
+      }, limit - (Date.now() - lastRan));
     }
   } as (...args: Parameters<T>) => void;
 };
