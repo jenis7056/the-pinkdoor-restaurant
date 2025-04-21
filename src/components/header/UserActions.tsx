@@ -1,5 +1,5 @@
 
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { UserRole } from "@/types";
 
@@ -11,12 +11,39 @@ interface UserActionsProps {
 
 const UserActions = ({ currentUser, currentCustomer, logout }: UserActionsProps) => {
   const navigate = useNavigate();
+  const location = useLocation();
   
-  if (currentUser || currentCustomer) {
+  // Determine which dashboard we're on based on the current path
+  const currentPath = location.pathname;
+  
+  // Display admin info only in admin routes
+  const isAdminRoute = currentPath.startsWith("/admin");
+  
+  // Display waiter info only in waiter routes
+  const isWaiterRoute = currentPath.startsWith("/waiter");
+  
+  // Display chef info only in chef routes
+  const isChefRoute = currentPath.startsWith("/chef");
+  
+  // Display customer info only in customer routes or if no staff is logged in
+  const isCustomerRoute = currentPath.startsWith("/customer");
+  
+  // Determine which user to display based on current route
+  const shouldShowStaffUser = currentUser && (
+    (isAdminRoute && currentUser.role === "admin") ||
+    (isWaiterRoute && currentUser.role === "waiter") ||
+    (isChefRoute && currentUser.role === "chef")
+  );
+  
+  const shouldShowCustomer = currentCustomer && (
+    isCustomerRoute || (!isAdminRoute && !isWaiterRoute && !isChefRoute)
+  );
+  
+  if (shouldShowStaffUser || shouldShowCustomer) {
     return (
       <div className="flex items-center space-x-3">
         <div className="hidden md:block text-sm">
-          {currentCustomer ? (
+          {shouldShowCustomer ? (
             <div className="animate-fade-in">
               <p className="font-medium">{currentCustomer.name}</p>
               {currentCustomer.tableNumber && (
@@ -25,12 +52,12 @@ const UserActions = ({ currentUser, currentCustomer, logout }: UserActionsProps)
                 </p>
               )}
             </div>
-          ) : (
+          ) : shouldShowStaffUser ? (
             <div className="animate-fade-in">
               <p className="font-medium">{currentUser?.name}</p>
               <p className="text-xs text-pink-200 capitalize">{currentUser?.role}</p>
             </div>
-          )}
+          ) : null}
         </div>
         
         <Button 

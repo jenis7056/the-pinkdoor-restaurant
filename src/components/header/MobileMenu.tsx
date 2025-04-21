@@ -1,5 +1,5 @@
 
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { useState } from "react";
 import { Menu } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -23,6 +23,27 @@ interface MobileMenuProps {
 const MobileMenu = ({ links, currentUser, currentCustomer, totalItems, logout }: MobileMenuProps) => {
   const navigate = useNavigate();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const location = useLocation();
+  
+  // Determine which dashboard we're on based on the current path
+  const currentPath = location.pathname;
+  
+  // Display admin info only in admin routes
+  const isAdminRoute = currentPath.startsWith("/admin");
+  
+  // Display waiter info only in waiter routes
+  const isWaiterRoute = currentPath.startsWith("/waiter");
+  
+  // Display chef info only in chef routes
+  const isChefRoute = currentPath.startsWith("/chef");
+  
+  // Display customer info only in customer routes or if no staff is logged in
+  const isCustomerRoute = currentPath.startsWith("/customer");
+  
+  // Determine which user to display based on current route
+  const shouldShowCustomerInfo = currentCustomer && (
+    isCustomerRoute || (!isAdminRoute && !isWaiterRoute && !isChefRoute)
+  );
 
   return (
     <Sheet open={isMenuOpen} onOpenChange={setIsMenuOpen}>
@@ -54,7 +75,7 @@ const MobileMenu = ({ links, currentUser, currentCustomer, totalItems, logout }:
             </Button>
           ))}
 
-          {currentCustomer && (
+          {shouldShowCustomerInfo && (
             <Button
               variant="ghost"
               onClick={() => {
