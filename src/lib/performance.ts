@@ -39,7 +39,8 @@ export function createStableClickHandler<T extends (...args: any[]) => any>(
   cooldownMs: number = 1000
 ): (...args: Parameters<T>) => void {
   return (...args: Parameters<T>) => {
-    if (preventRapidClicks(`${id}-${Date.now()}`, cooldownMs)) {
+    // Use a stable ID that doesn't change on each render
+    if (preventRapidClicks(id, cooldownMs)) {
       handler(...args);
     }
   };
@@ -51,3 +52,29 @@ export function createStableClickHandler<T extends (...args: any[]) => any>(
 export function clearClickTracker(): void {
   buttonClickTracker.clear();
 }
+
+/**
+ * Stable ID generator for components that need a consistent ID across renders
+ * @param prefix Prefix for the ID
+ * @param id Unique identifier for the component
+ */
+export function generateStableId(prefix: string, id: string): string {
+  return `${prefix}-${id}`;
+}
+
+/**
+ * Create a permanent click handler that persists across rerenders
+ * @param handler The handler function
+ * @param componentId Identifier for the component
+ * @param actionName Name of the action
+ * @param cooldownMs Cooldown time in milliseconds
+ */
+export const createPermanentClickHandler = <T extends (...args: any[]) => any>(
+  handler: T,
+  componentId: string,
+  actionName: string,
+  cooldownMs: number = 1000
+): ((...args: Parameters<T>) => void) => {
+  const handlerId = `${componentId}-${actionName}`;
+  return createStableClickHandler(handler, handlerId, cooldownMs);
+};

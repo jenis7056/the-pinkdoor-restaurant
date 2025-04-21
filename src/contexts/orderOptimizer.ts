@@ -180,7 +180,7 @@ export const computeCache = new ComputeCache(200); // Allow up to 200 cached ite
 // Global indicator for in-progress updates to prevent duplicate status changes
 const processingOrderIds = new Set<string>();
 let lastProcessedTime = new Map<string, number>();
-const MIN_PROCESSING_INTERVAL = 5000; // 5 seconds minimum between order updates
+const MIN_PROCESSING_INTERVAL = 3000; // Reduced to 3 seconds to improve responsiveness
 
 /**
  * Check if an order is currently being processed or was recently processed
@@ -203,7 +203,7 @@ export const isOrderProcessing = (orderId: string): boolean => {
  * @param orderId ID of the order to mark
  * @param duration Duration in ms to consider the order in processing state
  */
-export const markOrderProcessing = (orderId: string, duration = 5000): void => {
+export const markOrderProcessing = (orderId: string, duration = 3000): void => {
   processingOrderIds.add(orderId);
   lastProcessedTime.set(orderId, Date.now());
   
@@ -230,3 +230,67 @@ export const clearAllProcessingStates = (): void => {
   
   console.log("All processing states have been cleared");
 };
+
+/**
+ * Store order data persistently to prevent loss during UI refreshes
+ */
+export const persistentOrderStore = {
+  // Store orders in memory to prevent loss during state resets
+  orderCache: new Map<string, Order>(),
+  
+  // Add or update an order in the persistent store
+  setOrder: (order: Order) => {
+    persistentOrderStore.orderCache.set(order.id, order);
+  },
+  
+  // Get an order from the persistent store
+  getOrder: (id: string): Order | undefined => {
+    return persistentOrderStore.orderCache.get(id);
+  },
+  
+  // Remove an order from the persistent store
+  removeOrder: (id: string) => {
+    persistentOrderStore.orderCache.delete(id);
+  },
+  
+  // Get all stored orders
+  getAllOrders: (): Order[] => {
+    return Array.from(persistentOrderStore.orderCache.values());
+  },
+  
+  // Synchronize with current state - adds any orders not in the store
+  syncWithState: (orders: Order[]) => {
+    orders.forEach(order => {
+      persistentOrderStore.setOrder(order);
+    });
+    return persistentOrderStore.getAllOrders();
+  }
+};
+
+// Ensure orders aren't lost during page reloads or component unmounts
+window.addEventListener('beforeunload', () => {
+  const orders = persistentOrderStore.getAllOrders();
+  if (orders.length > 0) {
+    try {
+      localStorage.setItem('pendingOrders', JSON.stringify(orders));
+    } catch (e) {
+      console.error("Failed to save orders to localStorage:", e);
+    }
+  }
+});
+
+// Try to load pending orders on initialization
+try {
+  const savedOrders = localStorage.getItem('pendingOrders');
+  if (savedOrders) {
+    const orders = JSON.parse(savedOrders);
+    orders.forEach((order: Order) => {
+      persistentOrderStore.setOrder(order);
+    });
+    // Clear after loading
+    localStorage.removeItem('pendingOrders');
+  }
+} catch (e) {
+  console.error("Failed to load pending orders:", e);
+}
+

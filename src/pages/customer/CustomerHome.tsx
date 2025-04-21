@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import Layout from "@/components/Layout";
 import MenuSection from "@/components/MenuSection";
@@ -8,11 +8,15 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ChevronRight, ShoppingCart, ClipboardList, LogOut } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { createPermanentClickHandler, clearClickTracker } from "@/lib/performance";
+import { recoverLostOrders } from "@/contexts/orderHelpers";
+import { persistentOrderStore } from "@/contexts/orderOptimizer";
 
 const CustomerHome = () => {
   const navigate = useNavigate();
-  const { menuItems, categories, currentCustomer, cart, orders, logout } = useApp();
+  const { menuItems, categories, currentCustomer, cart, orders, logout, setOrders } = useApp();
   const [selectedCategory, setSelectedCategory] = useState<string>("");
+  const [isLoading, setIsLoading] = useState(true);
 
   // Set initial category when categories are loaded
   useEffect(() => {
@@ -20,13 +24,37 @@ const CustomerHome = () => {
       setSelectedCategory(categories[0]?.name || "");
     }
   }, [categories, selectedCategory]);
+  
+  // Initialize page and recover any lost orders
+  useEffect(() => {
+    clearClickTracker(); // Clear any stale click tracking data
+    
+    if (currentCustomer) {
+      // Try to recover any lost orders
+      setTimeout(() => {
+        recoverLostOrders(setOrders);
+        setIsLoading(false);
+      }, 300);
+    } else {
+      setIsLoading(false);
+    }
+    
+    return () => {
+      // When leaving the page, store the current orders
+      if (orders.length > 0) {
+        orders.forEach(order => {
+          persistentOrderStore.setOrder(order);
+        });
+      }
+    };
+  }, [currentCustomer, setOrders, orders]);
 
   // Redirect if not logged in as customer - now in useEffect to avoid React warnings
   useEffect(() => {
-    if (!currentCustomer) {
+    if (!currentCustomer && !isLoading) {
       navigate("/customer-registration");
     }
-  }, [currentCustomer, navigate]);
+  }, [currentCustomer, navigate, isLoading]);
 
   // If still loading or no customer, show nothing
   if (!currentCustomer) {
@@ -50,11 +78,26 @@ const CustomerHome = () => {
   // Get subcategories for the selected category
   const subcategories = categories.find(cat => cat.name === selectedCategory)?.subcategories || [];
 
-  // Handle customer logout
-  const handleLogout = () => {
+  // Handle customer logout with improved click handling
+  const handleLogout = useCallback(() => {
     logout();
     navigate("/customer-registration");
-  };
+  }, [logout, navigate]);
+
+  // Create stable click handlers that won't cause unnecessary re-renders
+  const stableLogout = createPermanentClickHandler(handleLogout, "customer-home", "logout", 1000);
+  const stableNavigateToCart = createPermanentClickHandler(
+    () => navigate("/customer/cart"),
+    "customer-home",
+    "navigate-to-cart",
+    800
+  );
+  const stableNavigateToOrders = createPermanentClickHandler(
+    () => navigate("/customer/orders"),
+    "customer-home",
+    "navigate-to-orders",
+    800
+  );
 
   return (
     <Layout>
@@ -70,7 +113,7 @@ const CustomerHome = () => {
             
             <div className="mt-4 md:mt-0 flex space-x-2">
               <Button 
-                onClick={() => navigate("/customer/cart")}
+                onClick={stableNavigateToCart}
                 className="bg-pink-700 hover:bg-pink-800 flex items-center"
               >
                 <ShoppingCart className="mr-2 h-5 w-5" />
@@ -82,7 +125,7 @@ const CustomerHome = () => {
               
               <Button 
                 variant="outline"
-                onClick={handleLogout}
+                onClick={stableLogout}
                 className="border-pink-700 text-pink-700 hover:bg-pink-50"
               >
                 <LogOut className="mr-2 h-5 w-5" />
@@ -151,7 +194,7 @@ const CustomerHome = () => {
         {hasActiveOrders && (
           <div className="fixed bottom-6 left-6 md:bottom-8 md:left-8">
             <Button
-              onClick={() => navigate("/customer/orders")}
+              onClick={stableNavigateToOrders}
               className="bg-pink-700 hover:bg-pink-800 rounded-full h-14 w-14 p-0 shadow-lg flex items-center justify-center"
               size="icon"
             >
@@ -162,7 +205,7 @@ const CustomerHome = () => {
 
         <div className="fixed bottom-6 right-6 md:hidden">
           <Button 
-            onClick={() => navigate("/customer/cart")}
+            onClick={stableNavigateToCart}
             className="bg-pink-700 hover:bg-pink-800 rounded-full h-14 w-14 p-0 shadow-lg flex items-center justify-center relative"
           >
             <ShoppingCart className="h-6 w-6" />

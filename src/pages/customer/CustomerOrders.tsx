@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import Layout from "@/components/Layout";
 import OrderCard from "@/components/OrderCard";
@@ -8,21 +8,47 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Order, UserRole } from "@/types";
 import { ArrowLeft, ShoppingBag } from "lucide-react";
+import { createPermanentClickHandler } from "@/lib/performance";
+import { recoverLostOrders } from "@/contexts/orderHelpers";
+import { persistentOrderStore } from "@/contexts/orderOptimizer";
 
 const CustomerOrders = () => {
   const [activeTab, setActiveTab] = useState("active");
   const navigate = useNavigate();
-  const { orders, currentCustomer } = useApp();
+  const { orders, currentCustomer, setOrders } = useApp();
+  const [isLoading, setIsLoading] = useState(true);
+  
+  // Initialize and try to recover any lost orders
+  useEffect(() => {
+    if (currentCustomer) {
+      // Try to recover any lost orders
+      setTimeout(() => {
+        recoverLostOrders(setOrders);
+        setIsLoading(false);
+      }, 300);
+    } else {
+      setIsLoading(false);
+    }
+    
+    return () => {
+      // When leaving the page, store the current orders
+      if (orders.length > 0) {
+        orders.forEach(order => {
+          persistentOrderStore.setOrder(order);
+        });
+      }
+    };
+  }, [currentCustomer, setOrders, orders]);
   
   // Use useEffect for navigation instead of direct navigation
   useEffect(() => {
-    if (!currentCustomer) {
+    if (!currentCustomer && !isLoading) {
       navigate("/customer-registration");
     }
-  }, [currentCustomer, navigate]);
+  }, [currentCustomer, navigate, isLoading]);
 
-  // If customer is not logged in, render nothing while redirect happens
-  if (!currentCustomer) {
+  // If customer is not logged in or still loading, render nothing while redirect happens
+  if (!currentCustomer || isLoading) {
     return null;
   }
 
@@ -52,6 +78,14 @@ const CustomerOrders = () => {
   // Use explicit UserRole type
   const userRole: UserRole = "customer";
 
+  // Create stable navigation handlers
+  const navigateToMenu = createPermanentClickHandler(
+    () => navigate("/customer"),
+    "customer-orders",
+    "navigate-to-menu",
+    800
+  );
+
   return (
     <Layout>
       <div className="container mx-auto px-4 py-8">
@@ -59,7 +93,7 @@ const CustomerOrders = () => {
           <Button 
             variant="ghost" 
             className="mb-4 pl-0 text-pink-900 hover:bg-transparent hover:text-pink-700"
-            onClick={() => navigate("/customer")}
+            onClick={navigateToMenu}
           >
             <ArrowLeft className="mr-2 h-4 w-4" />
             Back to Menu
@@ -99,7 +133,7 @@ const CustomerOrders = () => {
                 <p className="text-gray-500 mb-6">You don't have any active orders at the moment</p>
                 <Button 
                   className="bg-pink-700 hover:bg-pink-800" 
-                  onClick={() => navigate("/customer")}
+                  onClick={navigateToMenu}
                 >
                   Browse Menu
                 </Button>
@@ -125,7 +159,7 @@ const CustomerOrders = () => {
                 <p className="text-gray-500 mb-6">You don't have any completed orders yet</p>
                 <Button 
                   className="bg-pink-700 hover:bg-pink-800" 
-                  onClick={() => navigate("/customer")}
+                  onClick={navigateToMenu}
                 >
                   Browse Menu
                 </Button>

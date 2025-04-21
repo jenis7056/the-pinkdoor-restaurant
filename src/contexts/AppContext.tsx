@@ -1,5 +1,4 @@
-
-import React, { createContext, useContext, useState, useEffect, useCallback } from "react";
+import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from "react";
 import { User, Customer, MenuItem, Order, OrderItem, Category, UserRole, OrderStatus } from "@/types";
 import { menuData } from "@/data/menuItems";
 import { categoriesData } from "@/data/categories";
@@ -9,10 +8,10 @@ import { AppContextType } from "./types";
 import { handleLogin, handleLogout } from "./authHelpers";
 import { handleAddMenuItem, handleUpdateMenuItem, handleDeleteMenuItem } from "./menuHelpers";
 import { handleRegisterCustomer, handleRemoveCustomer } from "./customerHelpers";
-import { handleCreateOrder, handleUpdateOrderStatus } from "./orderHelpers";
+import { handleCreateOrder, handleUpdateOrderStatus, recoverLostOrders } from "./orderHelpers";
 import { handleAddToCart, handleUpdateCartItem, handleRemoveFromCart, handleClearCart } from "./cartHelpers";
 import { loadStateFromLocalStorage, saveToLocalStorage, forceSyncToLocalStorage } from "./localStorageHelpers";
-import { clearAllProcessingStates } from "./orderOptimizer";
+import { clearAllProcessingStates, persistentOrderStore } from "./orderOptimizer";
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
@@ -36,6 +35,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   
   // Flag to prevent initialization race conditions
   const [isInitialized, setIsInitialized] = useState(false);
+  
+  // Store initialization timestamp to detect fresh sessions
+  const initTimeRef = useRef<number>(Date.now());
 
   // Clear all processing flags on app initialization to prevent stuck state
   useEffect(() => {
@@ -53,6 +55,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     );
     
     setIsInitialized(true);
+    
+    // Attempt to recover any lost orders
+    setTimeout(() => {
+      recoverLostOrders(setOrders);
+    }, 1000); // Give a small delay to ensure everything else is loaded first
 
     // Add storage event listener for cross-tab communication
     const handleStorageChange = (event: StorageEvent) => {
@@ -69,11 +76,41 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
               if (parsed._timestamp) {
                 // This is the new format with timestamp
                 console.log("Updating orders from storage event (with timestamp):", parsed.data);
-                setOrders(parsed.data);
+                setOrders(prev => {
+                  // Keep track of existing orders
+                  const existingIds = new Set(prev.map(order => order.id));
+                  
+                  // Merge with current orders, preferring newer versions
+                  const mergedOrders = [...prev];
+                  
+                  // Add new orders or update existing ones
+                  for (const newOrder of parsed.data) {
+                    if (!existingIds.has(newOrder.id)) {
+                      // This is a new order
+                      mergedOrders.push(newOrder);
+                    } else {
+                      // Update existing order if the stored one is newer
+                      const existingIndex = mergedOrders.findIndex(order => order.id === newOrder.id);
+                      if (new Date(newOrder.updatedAt) > new Date(mergedOrders[existingIndex].updatedAt)) {
+                        mergedOrders[existingIndex] = newOrder;
+                      }
+                    }
+                  }
+                  
+                  // Sync with persistent store
+                  return persistentOrderStore.syncWithState(mergedOrders);
+                });
               } else {
                 // Regular format
                 console.log("Updating orders from storage event:", parsed);
-                setOrders(parsed);
+                setOrders(prev => {
+                  // Instead of replacing, merge with existing orders
+                  const existingIds = new Set(prev.map(order => order.id));
+                  const newOrders = parsed.filter((order: Order) => !existingIds.has(order.id));
+                  
+                  const mergedOrders = [...prev, ...newOrders];
+                  return persistentOrderStore.syncWithState(mergedOrders);
+                });
               }
             } catch (error) {
               console.error("Error parsing orders from storage event:", error);
@@ -117,6 +154,15 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     window.addEventListener('storage', handleStorageChange);
     return () => window.removeEventListener('storage', handleStorageChange);
   }, []);
+
+  // When orders change, update all orders in the persistent store
+  useEffect(() => {
+    if (isInitialized && orders.length > 0) {
+      orders.forEach(order => {
+        persistentOrderStore.setOrder(order);
+      });
+    }
+  }, [orders, isInitialized]);
 
   // Save state to localStorage when it changes
   useEffect(() => {

@@ -1,7 +1,16 @@
 
 import { Customer, OrderItem, Order, OrderStatus } from "@/types";
 import { toast } from "sonner";
-import { optimizeBatchOrderUpdate, throttle, debounce, computeCache, markOrderProcessing, isOrderProcessing, clearProcessingState } from "./orderOptimizer";
+import { 
+  optimizeBatchOrderUpdate, 
+  throttle, 
+  debounce, 
+  computeCache, 
+  markOrderProcessing, 
+  isOrderProcessing, 
+  clearProcessingState,
+  persistentOrderStore
+} from "./orderOptimizer";
 
 // Track recent operations to prevent duplicates
 const recentOperations = new Map<string, number>();
@@ -58,8 +67,19 @@ export const handleCreateOrder = (
   
   console.log("Creating new order:", newOrder);
   
+  // Add order to persistent store first
+  persistentOrderStore.setOrder(newOrder);
+  
   // Use functional update to avoid stale state
-  setOrders(prev => [...prev, newOrder]);
+  setOrders(prev => {
+    // Make sure we aren't adding duplicate orders
+    const orderExists = prev.some(order => order.id === newOrder.id);
+    if (orderExists) {
+      return prev;
+    }
+    return [...prev, newOrder];
+  });
+  
   setCart([]); // Clear the cart after ordering
   
   toast.success('Your order has been placed successfully!', {
@@ -94,6 +114,9 @@ export const handleCancelOrder = (
   // Clear processing state first to ensure cancellation works
   clearProcessingState(orderId);
   
+  // Remove from persistent store
+  persistentOrderStore.removeOrder(orderId);
+  
   // Use optimized approach to filter - more efficient than map+filter
   setOrders(prev => prev.filter(order => order.id !== orderId));
   
@@ -115,7 +138,7 @@ export const handleUpdateOrderStatus = (
   const updateKey = `update-${orderId}-${status}-${Date.now()}`;
   
   // Prevent duplicate updates with status-specific throttling
-  if (!preventDuplicateOperation(updateKey, 3000)) {
+  if (!preventDuplicateOperation(updateKey, 2000)) {
     console.log(`Prevented duplicate status update for ${orderId}`);
     return;
   }
@@ -127,7 +150,7 @@ export const handleUpdateOrderStatus = (
   }
   
   // Mark this order as being processed to prevent multiple updates
-  markOrderProcessing(orderId, 5000); // Prevent clicks for 5 seconds
+  markOrderProcessing(orderId, 3000); // Prevent clicks for 3 seconds (reduced from 5s)
   
   // Check cache first - don't perform the same update multiple times in a short period
   const cacheKey = `order_update_${orderId}_${status}`;
@@ -145,9 +168,17 @@ export const handleUpdateOrderStatus = (
     duration: 2000
   });
   
+  // First, check if the order exists in the persistent store
+  const storedOrder = persistentOrderStore.getOrder(orderId);
+  
   // Perform the update immediately to improve responsiveness
-  // First, check if the order exists and if the status change makes sense
   setOrders(prev => {
+    // Recover the order from persistent store if it's missing from state
+    if (!prev.some(o => o.id === orderId) && storedOrder) {
+      console.log(`Recovered order ${orderId} from persistent store`);
+      prev = [...prev, storedOrder];
+    }
+    
     const order = prev.find(o => o.id === orderId);
     if (!order) {
       console.error(`Order ${orderId} not found`);
@@ -173,7 +204,15 @@ export const handleUpdateOrderStatus = (
     console.log(`Valid status change from ${order.status} to ${status} for order ${orderId}`);
     
     // Use optimized batch update
-    return optimizeBatchOrderUpdate(prev, orderId, status);
+    const updatedOrders = optimizeBatchOrderUpdate(prev, orderId, status);
+    
+    // Update the persistent store with the new order state
+    const updatedOrder = updatedOrders.find(o => o.id === orderId);
+    if (updatedOrder) {
+      persistentOrderStore.setOrder(updatedOrder);
+    }
+    
+    return updatedOrders;
   });
   
   // Show toast notification after a small delay, but don't block the main thread
@@ -191,7 +230,8 @@ export const handleUpdateOrderStatus = (
     });
   }, 500);
   
-  // Handle auto-completion of orders
+  // Only auto-complete served orders if they're not already completed
+  // and when they were served more than 1 minute ago
   if (status === 'served') {
     // Auto-complete orders after they've been served for a while (60 seconds)
     setTimeout(() => {
@@ -205,6 +245,16 @@ export const handleUpdateOrderStatus = (
         return optimizeBatchOrderUpdate(prev, orderId, 'completed');
       });
       
+      // Update persistent store
+      const storedOrder = persistentOrderStore.getOrder(orderId);
+      if (storedOrder && storedOrder.status === 'served') {
+        persistentOrderStore.setOrder({
+          ...storedOrder,
+          status: 'completed',
+          updatedAt: new Date().toISOString()
+        });
+      }
+      
       toast.success('Your order has been completed', {
         id: `auto-complete-${orderId}`,
       });
@@ -212,6 +262,7 @@ export const handleUpdateOrderStatus = (
   }
   
   // Only logout customer when admin manually completes the order from admin panel
+  // and make sure we prevent logout for newly completed orders by customer
   if (status === 'completed' && setCurrentCustomer) {
     // Check if this is an admin/staff action or a customer action
     const isCustomerAction = document.location.pathname.includes('/customer');
@@ -244,3 +295,31 @@ export function cleanupOperationsCache() {
 
 // Set up automatic cleanup every hour
 setInterval(cleanupOperationsCache, 3600000);
+
+/**
+ * Recover any lost orders from the persistent store
+ * @param setOrders setState function for orders
+ */
+export const recoverLostOrders = (
+  setOrders: React.Dispatch<React.SetStateAction<Order[]>>
+) => {
+  const persistentOrders = persistentOrderStore.getAllOrders();
+  if (persistentOrders.length === 0) return;
+  
+  console.log(`Attempting to recover ${persistentOrders.length} orders from persistent store`);
+  
+  setOrders(prev => {
+    // Filter out orders that already exist in the state
+    const missingOrders = persistentOrders.filter(
+      persistentOrder => !prev.some(stateOrder => stateOrder.id === persistentOrder.id)
+    );
+    
+    if (missingOrders.length === 0) {
+      return prev;
+    }
+    
+    console.log(`Recovered ${missingOrders.length} missing orders`);
+    return [...prev, ...missingOrders];
+  });
+};
+

@@ -1,3 +1,4 @@
+
 import { useNavigate } from "react-router-dom";
 import Layout from "@/components/Layout";
 import { useApp } from "@/contexts/AppContext";
@@ -6,10 +7,13 @@ import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/componen
 import { Separator } from "@/components/ui/separator";
 import { toast } from "sonner";
 import { Trash2, X, ShoppingBag, ArrowLeft, Plus, Minus } from "lucide-react";
+import { useCallback, useState } from "react";
+import { createPermanentClickHandler } from "@/lib/performance";
 
 const CustomerCart = () => {
   const navigate = useNavigate();
   const { cart, updateCartItem, removeFromCart, clearCart, createOrder, currentCustomer } = useApp();
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   if (!currentCustomer) {
     navigate("/customer-registration");
@@ -47,15 +51,46 @@ const CustomerCart = () => {
     return subtotal + sgst + cgst;
   };
 
-  const handlePlaceOrder = () => {
+  // Create a stable handler that won't change on re-renders
+  const handlePlaceOrder = useCallback(() => {
     if (cart.length === 0) {
       toast.error("Your cart is empty");
       return;
     }
     
-    createOrder(cart);
-    navigate("/customer/orders");
-  };
+    if (isSubmitting) {
+      toast.info("Your order is being processed...");
+      return;
+    }
+    
+    setIsSubmitting(true);
+    
+    try {
+      const newOrder = createOrder(cart);
+      
+      if (newOrder) {
+        toast.success("Order placed successfully!");
+        setTimeout(() => {
+          navigate("/customer/orders");
+        }, 500);
+      } else {
+        toast.error("There was an error placing your order");
+        setIsSubmitting(false);
+      }
+    } catch (error) {
+      console.error("Error placing order:", error);
+      toast.error("There was an error placing your order");
+      setIsSubmitting(false);
+    }
+  }, [cart, isSubmitting, createOrder, navigate]);
+
+  // Create a stable click handler with debounce
+  const stableHandlePlaceOrder = createPermanentClickHandler(
+    handlePlaceOrder,
+    "customer-cart",
+    "place-order",
+    2000 // 2 second cooldown
+  );
 
   const subtotal = calculateSubtotal();
   const { sgst, cgst } = calculateTaxes(subtotal);
@@ -112,11 +147,7 @@ const CustomerCart = () => {
                         <div className="flex justify-between">
                           <h3 className="font-medium text-gray-900">{item.menuItem.name}</h3>
                           <p className="font-medium text-pink-900">
-                            {new Intl.NumberFormat("en-IN", {
-                              style: "currency",
-                              currency: "INR",
-                              minimumFractionDigits: 0,
-                            }).format(item.menuItem.price * item.quantity)}
+                            {formatCurrency(item.menuItem.price * item.quantity)}
                           </p>
                         </div>
                         <p className="text-sm text-gray-500 mt-1">{item.menuItem.description}</p>
@@ -184,11 +215,12 @@ const CustomerCart = () => {
               
               <div className="bg-gray-50 p-4 md:p-6 rounded-b-lg border-t border-pink-100">
                 <Button 
-                  className="w-full bg-pink-700 hover:bg-pink-800"
-                  onClick={handlePlaceOrder}
+                  className={`w-full ${isSubmitting ? 'bg-gray-400' : 'bg-pink-700 hover:bg-pink-800'}`}
+                  onClick={stableHandlePlaceOrder}
+                  disabled={isSubmitting}
                 >
                   <ShoppingBag className="mr-2 h-5 w-5" />
-                  Place Order
+                  {isSubmitting ? "Processing..." : "Place Order"}
                 </Button>
               </div>
             </div>
