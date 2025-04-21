@@ -1,4 +1,3 @@
-
 import { useNavigate } from "react-router-dom";
 import Layout from "@/components/Layout";
 import { useApp } from "@/contexts/AppContext";
@@ -66,17 +65,14 @@ const CustomerCart = () => {
     setIsSubmitting(true);
     
     try {
-      const newOrder = createOrder(cart);
+      // Fix: Don't test the return value of createOrder since it returns void
+      createOrder(cart);
       
-      if (newOrder) {
-        toast.success("Order placed successfully!");
-        setTimeout(() => {
-          navigate("/customer/orders");
-        }, 500);
-      } else {
-        toast.error("There was an error placing your order");
-        setIsSubmitting(false);
-      }
+      // Simply proceed with success flow
+      toast.success("Order placed successfully!");
+      setTimeout(() => {
+        navigate("/customer/orders");
+      }, 500);
     } catch (error) {
       console.error("Error placing order:", error);
       toast.error("There was an error placing your order");
