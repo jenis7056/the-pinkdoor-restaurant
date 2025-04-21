@@ -1,5 +1,5 @@
 
-import React, { createContext, useContext, useState, useEffect } from "react";
+import React, { createContext, useContext, useState, useEffect, useCallback } from "react";
 import { User, Customer, MenuItem, Order, OrderItem, Category, UserRole, OrderStatus } from "@/types";
 import { menuData } from "@/data/menuItems";
 import { categoriesData } from "@/data/categories";
@@ -12,6 +12,7 @@ import { handleRegisterCustomer, handleRemoveCustomer } from "./customerHelpers"
 import { handleCreateOrder, handleUpdateOrderStatus } from "./orderHelpers";
 import { handleAddToCart, handleUpdateCartItem, handleRemoveFromCart, handleClearCart } from "./cartHelpers";
 import { loadStateFromLocalStorage, saveToLocalStorage, forceSyncToLocalStorage } from "./localStorageHelpers";
+import { clearAllProcessingStates } from "./orderOptimizer";
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
@@ -32,6 +33,14 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   
   // Cart state
   const [cart, setCart] = useState<OrderItem[]>([]);
+  
+  // Flag to prevent initialization race conditions
+  const [isInitialized, setIsInitialized] = useState(false);
+
+  // Clear all processing flags on app initialization to prevent stuck state
+  useEffect(() => {
+    clearAllProcessingStates();
+  }, []);
 
   // Load initial state from localStorage
   useEffect(() => {
@@ -42,6 +51,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       setOrders,
       setCart
     );
+    
+    setIsInitialized(true);
 
     // Add storage event listener for cross-tab communication
     const handleStorageChange = (event: StorageEvent) => {
@@ -109,85 +120,95 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   // Save state to localStorage when it changes
   useEffect(() => {
-    saveToLocalStorage('currentUser', currentUser);
-  }, [currentUser]);
+    if (isInitialized) {
+      saveToLocalStorage('currentUser', currentUser);
+    }
+  }, [currentUser, isInitialized]);
 
   useEffect(() => {
-    saveToLocalStorage('currentCustomer', currentCustomer);
-  }, [currentCustomer]);
+    if (isInitialized) {
+      saveToLocalStorage('currentCustomer', currentCustomer);
+    }
+  }, [currentCustomer, isInitialized]);
 
   useEffect(() => {
-    saveToLocalStorage('customers', customers);
-  }, [customers]);
+    if (isInitialized) {
+      saveToLocalStorage('customers', customers);
+    }
+  }, [customers, isInitialized]);
 
   useEffect(() => {
-    // For orders, we use forceSyncToLocalStorage to ensure it triggers
-    // the storage event even if the stringified value is the same
-    // This is important for real-time updates in the waiter portal
-    forceSyncToLocalStorage('orders', orders);
-    console.log("Updated orders:", orders);
-  }, [orders]);
+    if (isInitialized) {
+      // For orders, we use forceSyncToLocalStorage to ensure it triggers
+      // the storage event even if the stringified value is the same
+      // This is important for real-time updates across different user dashboards
+      forceSyncToLocalStorage('orders', orders);
+      console.log("Updated orders:", orders);
+    }
+  }, [orders, isInitialized]);
 
   useEffect(() => {
-    saveToLocalStorage('cart', cart);
-  }, [cart]);
+    if (isInitialized) {
+      saveToLocalStorage('cart', cart);
+    }
+  }, [cart, isInitialized]);
 
   // Authentication functions
-  const login = (username: string, password: string): UserRole | false => {
+  const login = useCallback((username: string, password: string): UserRole | false => {
     return handleLogin(username, password, setCurrentUser);
-  };
+  }, []);
 
-  const logout = () => {
+  const logout = useCallback(() => {
     handleLogout(setCurrentUser);
-  };
+  }, []);
 
   // Menu management functions
-  const addMenuItem = (item: MenuItem) => {
+  const addMenuItem = useCallback((item: MenuItem) => {
     handleAddMenuItem(item, setMenuItems);
-  };
+  }, []);
 
-  const updateMenuItem = (id: string, item: Partial<MenuItem>) => {
+  const updateMenuItem = useCallback((id: string, item: Partial<MenuItem>) => {
     handleUpdateMenuItem(id, item, setMenuItems);
-  };
+  }, []);
 
-  const deleteMenuItem = (id: string) => {
+  const deleteMenuItem = useCallback((id: string) => {
     handleDeleteMenuItem(id, menuItems, setMenuItems);
-  };
+  }, [menuItems]);
 
   // Customer management functions
-  const registerCustomer = (name: string, tableNumber: number) => {
+  const registerCustomer = useCallback((name: string, tableNumber: number) => {
     handleRegisterCustomer(name, tableNumber, setCustomers, setCurrentCustomer, customers, orders);
-  };
+  }, [customers, orders]);
 
-  const removeCustomer = (id: string) => {
+  const removeCustomer = useCallback((id: string) => {
     handleRemoveCustomer(id, customers, currentCustomer, setCustomers, setCurrentCustomer);
-  };
+  }, [customers, currentCustomer]);
 
   // Order management functions
-  const createOrder = (items: OrderItem[]) => {
-    handleCreateOrder(items, currentCustomer, setOrders, setCart);
-  };
+  const createOrder = useCallback((items: OrderItem[]) => {
+    return handleCreateOrder(items, currentCustomer, setOrders, setCart);
+  }, [currentCustomer]);
 
-  const updateOrderStatus = (orderId: string, status: OrderStatus) => {
+  const updateOrderStatus = useCallback((orderId: string, status: OrderStatus) => {
     handleUpdateOrderStatus(orderId, status, setOrders, setCurrentCustomer);
-  };
+  }, []);
 
   // Cart management functions
-  const addToCart = (menuItem: MenuItem, quantity: number) => {
+  const addToCart = useCallback((menuItem: MenuItem, quantity: number) => {
     handleAddToCart(menuItem, quantity, cart, setCart);
-  };
+  }, [cart]);
 
-  const updateCartItem = (id: string, quantity: number) => {
+  const updateCartItem = useCallback((id: string, quantity: number) => {
     handleUpdateCartItem(id, quantity, setCart, removeFromCart);
-  };
+  }, []);
 
-  const removeFromCart = (id: string) => {
+  const removeFromCart = useCallback((id: string) => {
     handleRemoveFromCart(id, cart, setCart);
-  };
+  }, [cart]);
 
-  const clearCart = () => {
+  const clearCart = useCallback(() => {
     handleClearCart(setCart);
-  };
+  }, []);
 
   const value: AppContextType = {
     // Authentication

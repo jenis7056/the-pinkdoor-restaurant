@@ -1,7 +1,7 @@
 
 import { Customer, OrderItem, Order, OrderStatus } from "@/types";
 import { toast } from "sonner";
-import { optimizeBatchOrderUpdate, throttle, debounce, computeCache, markOrderProcessing, isOrderProcessing } from "./orderOptimizer";
+import { optimizeBatchOrderUpdate, throttle, debounce, computeCache, markOrderProcessing, isOrderProcessing, clearProcessingState } from "./orderOptimizer";
 
 export const handleCreateOrder = (
   items: OrderItem[],
@@ -56,6 +56,9 @@ export const handleCancelOrder = (
   orderId: string,
   setOrders: React.Dispatch<React.SetStateAction<Order[]>>
 ) => {
+  // Clear processing state first to ensure cancellation works
+  clearProcessingState(orderId);
+  
   // Use optimized approach to filter - more efficient than map+filter
   setOrders(prev => prev.filter(order => order.id !== orderId));
   toast.success('Order cancelled successfully');
@@ -73,6 +76,9 @@ export const handleUpdateOrderStatus = (
   // Prevent duplicate updates - global check using shared state
   if (isOrderProcessing(orderId)) {
     console.log("Skipping duplicate update (already processing):", orderId, status);
+    toast.error("Please wait, this order is currently being updated", {
+      id: `duplicate-${orderId}`
+    });
     return;
   }
   
@@ -83,8 +89,12 @@ export const handleUpdateOrderStatus = (
   const cacheKey = `order_update_${orderId}_${status}`;
   if (computeCache.get(cacheKey)) {
     console.log("Skipping duplicate update (cached):", orderId, status);
+    toast.error("Please wait, this order was just updated", {
+      id: `cached-${orderId}`
+    });
     return;
   }
+  
   computeCache.set(cacheKey, true, 2000); // Cache for 2 seconds to prevent rapid clicks
   
   // Show visual feedback immediately
@@ -94,16 +104,31 @@ export const handleUpdateOrderStatus = (
   });
   
   // Perform the update immediately to improve responsiveness
+  // First, check if the order exists and if the status change makes sense
   setOrders(prev => {
-    // Check if order exists and status is different
-    const orderExists = prev.some(o => o.id === orderId && o.status !== status);
-    if (!orderExists) return prev;
+    const order = prev.find(o => o.id === orderId);
+    if (!order) {
+      console.error(`Order ${orderId} not found`);
+      return prev;
+    }
+    
+    // Verify the status change is valid in the workflow
+    const statusFlow: OrderStatus[] = ["pending", "confirmed", "preparing", "ready", "served", "completed"];
+    const currentIndex = statusFlow.indexOf(order.status);
+    const newIndex = statusFlow.indexOf(status);
+    
+    if (newIndex <= currentIndex && status !== 'completed') {
+      console.error(`Invalid status change from ${order.status} to ${status}`);
+      return prev;
+    }
+    
+    console.log(`Valid status change from ${order.status} to ${status} for order ${orderId}`);
     
     // Use optimized batch update
     return optimizeBatchOrderUpdate(prev, orderId, status);
   });
   
-  // Show toast notification without blocking the main thread
+  // Show toast notification after a small delay, but don't block the main thread
   setTimeout(() => {
     const statusMessages = {
       'confirmed': 'Order confirmed by waiter',

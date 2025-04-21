@@ -155,14 +155,23 @@ export const computeCache = new ComputeCache();
 
 // Global indicator for in-progress updates to prevent duplicate status changes
 const processingOrderIds = new Set<string>();
+let lastProcessedTime = new Map<string, number>();
+const MIN_PROCESSING_INTERVAL = 5000; // 5 seconds minimum between order updates
 
 /**
- * Check if an order is currently being processed
+ * Check if an order is currently being processed or was recently processed
  * @param orderId ID of the order to check
  * @returns Boolean indicating if the order is being processed
  */
 export const isOrderProcessing = (orderId: string): boolean => {
-  return processingOrderIds.has(orderId);
+  if (processingOrderIds.has(orderId)) {
+    return true;
+  }
+  
+  // Also check if the order was processed recently
+  const lastTime = lastProcessedTime.get(orderId) || 0;
+  const timeSinceLastUpdate = Date.now() - lastTime;
+  return timeSinceLastUpdate < MIN_PROCESSING_INTERVAL;
 };
 
 /**
@@ -170,10 +179,28 @@ export const isOrderProcessing = (orderId: string): boolean => {
  * @param orderId ID of the order to mark
  * @param duration Duration in ms to consider the order in processing state
  */
-export const markOrderProcessing = (orderId: string, duration = 3000): void => {
+export const markOrderProcessing = (orderId: string, duration = 5000): void => {
   processingOrderIds.add(orderId);
+  lastProcessedTime.set(orderId, Date.now());
   
   setTimeout(() => {
     processingOrderIds.delete(orderId);
   }, duration);
+};
+
+/**
+ * Force clear processing state for an order (used for debugging and recovery)
+ * @param orderId ID of the order to clear
+ */
+export const clearProcessingState = (orderId: string): void => {
+  processingOrderIds.delete(orderId);
+  lastProcessedTime.delete(orderId);
+};
+
+/**
+ * Clear all processing states (emergency reset)
+ */
+export const clearAllProcessingStates = (): void => {
+  processingOrderIds.clear();
+  lastProcessedTime.clear();
 };
