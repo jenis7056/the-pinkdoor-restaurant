@@ -1,5 +1,4 @@
-
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import Layout from "@/components/Layout";
 import { useApp } from "@/contexts/AppContext";
@@ -39,12 +38,13 @@ const AdminMenu = () => {
     isSpecial: false,
   });
   const [editingItemId, setEditingItemId] = useState<string | null>(null);
+  const [isDialogAnimating, setIsDialogAnimating] = useState(false);
   
-  // Redirect if not logged in as admin
-  if (!currentUser || currentUser.role !== "admin") {
-    navigate("/login");
-    return null;
-  }
+  useEffect(() => {
+    if (!currentUser || currentUser.role !== "admin") {
+      navigate("/login");
+    }
+  }, [currentUser, navigate]);
 
   const handleInputChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
@@ -62,6 +62,26 @@ const AdminMenu = () => {
     setFormData((prev) => ({ ...prev, isSpecial: checked }));
   };
 
+  const safeCloseAddDialog = () => {
+    if (isDialogAnimating) return;
+    
+    setIsDialogAnimating(true);
+    setTimeout(() => {
+      setIsAddDialogOpen(false);
+      setIsDialogAnimating(false);
+    }, 100);
+  };
+  
+  const safeCloseEditDialog = () => {
+    if (isDialogAnimating) return;
+    
+    setIsDialogAnimating(true);
+    setTimeout(() => {
+      setIsEditDialogOpen(false);
+      setIsDialogAnimating(false);
+    }, 100);
+  };
+
   const handleAddItem = () => {
     if (!formData.name || !formData.description || !formData.category || formData.price <= 0) {
       toast.error("Please fill all required fields");
@@ -77,7 +97,7 @@ const AdminMenu = () => {
       subcategory: "",
       isSpecial: false,
     });
-    setIsAddDialogOpen(false);
+    safeCloseAddDialog();
   };
 
   const handleOpenEditDialog = (itemId: string) => {
@@ -92,7 +112,10 @@ const AdminMenu = () => {
         isSpecial: item.isSpecial || false,
       });
       setEditingItemId(itemId);
-      setIsEditDialogOpen(true);
+      
+      setTimeout(() => {
+        setIsEditDialogOpen(true);
+      }, 10);
     }
   };
 
@@ -114,17 +137,15 @@ const AdminMenu = () => {
       isSpecial: false,
     });
     setEditingItemId(null);
-    setIsEditDialogOpen(false);
+    safeCloseEditDialog();
   };
 
   const handleDeleteItem = (itemId: string) => {
     deleteMenuItem(itemId);
   };
 
-  // Get subcategories for the selected category
   const subcategories = categories.find(cat => cat.name === selectedCategory)?.subcategories || [];
 
-  // Filter menu items by selected category
   const filteredItems = selectedCategory
     ? menuItems.filter(item => item.category === selectedCategory)
     : menuItems;
@@ -151,7 +172,19 @@ const AdminMenu = () => {
           
           <Button 
             className="mt-4 md:mt-0 bg-pink-700 hover:bg-pink-800"
-            onClick={() => setIsAddDialogOpen(true)}
+            onClick={() => {
+              setFormData({
+                name: "",
+                price: 0,
+                description: "",
+                category: categories[0]?.name || "",
+                subcategory: "",
+                isSpecial: false,
+              });
+              setTimeout(() => {
+                setIsAddDialogOpen(true);
+              }, 10);
+            }}
           >
             <Plus className="mr-2 h-5 w-5" />
             Add New Item
@@ -185,8 +218,13 @@ const AdminMenu = () => {
           ))}
         </Tabs>
 
-        {/* Add Item Dialog */}
-        <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
+        <Dialog 
+          key={`add-dialog-${isAddDialogOpen ? 'open' : 'closed'}`}
+          open={isAddDialogOpen} 
+          onOpenChange={(open) => {
+            if (!open) safeCloseAddDialog();
+          }}
+        >
           <DialogContent className="sm:max-w-lg">
             <DialogHeader>
               <DialogTitle>Add New Menu Item</DialogTitle>
@@ -300,18 +338,31 @@ const AdminMenu = () => {
               </div>
             </div>
             <DialogFooter>
-              <Button variant="outline" onClick={() => setIsAddDialogOpen(false)}>
+              <Button 
+                variant="outline" 
+                onClick={safeCloseAddDialog}
+                disabled={isDialogAnimating}
+              >
                 Cancel
               </Button>
-              <Button onClick={handleAddItem} className="bg-pink-700 hover:bg-pink-800">
+              <Button 
+                onClick={handleAddItem} 
+                className="bg-pink-700 hover:bg-pink-800"
+                disabled={isDialogAnimating}
+              >
                 Add Item
               </Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>
 
-        {/* Edit Item Dialog */}
-        <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+        <Dialog 
+          key={`edit-dialog-${isEditDialogOpen ? 'open' : 'closed'}-${editingItemId}`}
+          open={isEditDialogOpen} 
+          onOpenChange={(open) => {
+            if (!open) safeCloseEditDialog();
+          }}
+        >
           <DialogContent className="sm:max-w-lg">
             <DialogHeader>
               <DialogTitle>Edit Menu Item</DialogTitle>
@@ -325,7 +376,7 @@ const AdminMenu = () => {
                 <Input
                   id="edit-name"
                   name="name"
-                  value={formData.name}
+                  value={formData.name || ''}
                   onChange={handleInputChange}
                   className="border-pink-200"
                 />
@@ -425,10 +476,18 @@ const AdminMenu = () => {
               </div>
             </div>
             <DialogFooter>
-              <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>
+              <Button 
+                variant="outline" 
+                onClick={safeCloseEditDialog}
+                disabled={isDialogAnimating}
+              >
                 Cancel
               </Button>
-              <Button onClick={handleEditItem} className="bg-pink-700 hover:bg-pink-800">
+              <Button 
+                onClick={handleEditItem} 
+                className="bg-pink-700 hover:bg-pink-800"
+                disabled={isDialogAnimating}
+              >
                 Save Changes
               </Button>
             </DialogFooter>

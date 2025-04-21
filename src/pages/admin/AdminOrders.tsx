@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useMemo, useCallback, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import Layout from "@/components/Layout";
@@ -8,7 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import { ArrowLeft, Search, ShoppingBag } from "lucide-react";
 import { OrderStatus } from "@/types";
-import { optimizeFilter, computeCache } from "@/contexts/orderOptimizer";
+import { optimizeFilter, computeCache, markOrderProcessing, isOrderProcessing } from "@/contexts/orderOptimizer";
 
 const AdminOrders = () => {
   const [activeTab, setActiveTab] = useState<OrderStatus | "all" | "active">("active");
@@ -17,6 +18,7 @@ const AdminOrders = () => {
   const { orders, updateOrderStatus, currentUser } = useApp();
   const prevOrdersRef = useRef(orders);
   const [processingOrders, setProcessingOrders] = useState<Set<string>>(new Set());
+  const lastUpdateTimeRef = useRef<Record<string, number>>({});
   
   // Redirect if not logged in as admin
   useEffect(() => {
@@ -91,12 +93,27 @@ const AdminOrders = () => {
     [activeTab, filteredOrders, getOrdersByStatus]
   );
 
-  // Improved update handler with debounce protection
+  // Enhanced update handler with additional safeguards
   const handleUpdateStatus = useCallback((orderId: string, status: OrderStatus) => {
-    // Prevent duplicate updates
-    if (processingOrders.has(orderId)) {
-      return;
+    // Check for global processing state
+    if (isOrderProcessing(orderId)) {
+      return; // Silently ignore duplicate updates instead of showing error
     }
+    
+    // Check for local processing state
+    if (processingOrders.has(orderId)) {
+      return; // Silently ignore
+    }
+    
+    // Check for time-based throttling (15 second minimum between updates to same order)
+    const now = Date.now();
+    const lastUpdateTime = lastUpdateTimeRef.current[orderId] || 0;
+    if (now - lastUpdateTime < 15000) {
+      return; // Silently ignore rapid updates
+    }
+    
+    // Update the last update time
+    lastUpdateTimeRef.current[orderId] = now;
     
     // Set processing state to prevent duplicate clicks
     setProcessingOrders(prev => {
@@ -104,6 +121,9 @@ const AdminOrders = () => {
       newSet.add(orderId);
       return newSet;
     });
+    
+    // Mark order as processing globally
+    markOrderProcessing(orderId, 15000); // 15 seconds cooldown
     
     // Call the update function
     updateOrderStatus(orderId, status);
@@ -115,7 +135,7 @@ const AdminOrders = () => {
         newSet.delete(orderId);
         return newSet;
       });
-    }, 5000); // 5 second cooldown
+    }, 15000); // 15 second global cooldown
   }, [updateOrderStatus, processingOrders]);
 
   const handleTabChange = useCallback((value: string) => {

@@ -35,8 +35,9 @@ const OrderCard = memo(({ order, userRole, updateStatus }: OrderCardProps) => {
   const [showDetails, setShowDetails] = useState(false);
   const [isLocalProcessing, setIsLocalProcessing] = useState(false);
   const processingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const buttonRef = useRef<HTMLButtonElement>(null);
 
-  // Check if order is being processed globally
+  // Check if order is being processed globally or locally
   const isProcessing = isLocalProcessing || isOrderProcessing(order.id);
 
   const statusIcons = {
@@ -93,6 +94,13 @@ const OrderCard = memo(({ order, userRole, updateStatus }: OrderCardProps) => {
       clearTimeout(processingTimeoutRef.current);
     }
   }, [order.status]);
+
+  // Disable button immediately on click to prevent multiple clicks
+  useEffect(() => {
+    if (isLocalProcessing && buttonRef.current) {
+      buttonRef.current.disabled = true;
+    }
+  }, [isLocalProcessing]);
 
   const updateItemQuantity = useCallback((itemId: string, delta: number) => {
     if (order.status !== 'pending') {
@@ -156,33 +164,36 @@ const OrderCard = memo(({ order, userRole, updateStatus }: OrderCardProps) => {
   const handleStatusUpdate = useCallback(() => {
     // Prevent multiple clicks
     if (isProcessing) {
-      toast.error("Please wait, order update in progress...");
-      return;
+      return; // Simply return without showing error toast to prevent confusion
     }
     
     const nextStatus = getNextStatus();
     if (!nextStatus || !updateStatus) return;
     
     if (canUpdateStatus(userRole, order.status, nextStatus)) {
-      // Set local processing state
+      // Set local processing state immediately
       setIsLocalProcessing(true);
       
-      // Visual feedback that button was clicked
+      // Visual feedback that button was clicked - with unique ID
+      const toastId = `updating-${order.id}-${Date.now()}`;
       toast.loading(`Updating order to ${nextStatus}...`, {
-        id: `updating-${order.id}`
+        id: toastId,
+        duration: 2000
       });
       
-      // Call the update function
-      updateStatus(order.id, nextStatus);
+      // Call the update function with a small delay
+      setTimeout(() => {
+        updateStatus(order.id, nextStatus);
+      }, 10);
       
-      // Reset local processing state after a delay
+      // Reset local processing state after a longer delay
       if (processingTimeoutRef.current) {
         clearTimeout(processingTimeoutRef.current);
       }
       
       processingTimeoutRef.current = setTimeout(() => {
         setIsLocalProcessing(false);
-      }, 5000); // 5 second cooldown
+      }, 10000); // 10 second cooldown to prevent rapid clicking
     }
   }, [isProcessing, getNextStatus, canUpdateStatus, userRole, order.status, order.id, updateStatus]);
 
@@ -193,8 +204,9 @@ const OrderCard = memo(({ order, userRole, updateStatus }: OrderCardProps) => {
     if (canUpdateStatus(userRole, order.status, nextStatus)) {
       return (
         <Button 
+          ref={buttonRef}
           onClick={handleStatusUpdate}
-          className={`bg-pink-700 hover:bg-pink-800 text-white`}
+          className={`bg-pink-700 hover:bg-pink-800 text-white ${isProcessing ? 'opacity-50 cursor-not-allowed' : ''}`}
           disabled={isProcessing}
         >
           {isProcessing ? (
