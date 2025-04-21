@@ -1,7 +1,7 @@
 
 import { Customer, OrderItem, Order, OrderStatus } from "@/types";
 import { toast } from "sonner";
-import { optimizeBatchOrderUpdate, throttle, debounce, computeCache } from "./orderOptimizer";
+import { optimizeBatchOrderUpdate, throttle, debounce, computeCache, markOrderProcessing, isOrderProcessing } from "./orderOptimizer";
 
 export const handleCreateOrder = (
   items: OrderItem[],
@@ -70,6 +70,15 @@ export const handleUpdateOrderStatus = (
 ) => {
   console.log("Updating order status:", orderId, status);
   
+  // Prevent duplicate updates - global check using shared state
+  if (isOrderProcessing(orderId)) {
+    console.log("Skipping duplicate update (already processing):", orderId, status);
+    return;
+  }
+  
+  // Mark this order as being processed to prevent multiple updates
+  markOrderProcessing(orderId, 5000); // Prevent clicks for 5 seconds
+  
   // Check cache first - don't perform the same update multiple times in a short period
   const cacheKey = `order_update_${orderId}_${status}`;
   if (computeCache.get(cacheKey)) {
@@ -78,11 +87,24 @@ export const handleUpdateOrderStatus = (
   }
   computeCache.set(cacheKey, true, 2000); // Cache for 2 seconds to prevent rapid clicks
   
+  // Show visual feedback immediately
+  toast.loading(`Updating order to ${status}...`, {
+    id: `toast-${orderId}-${status}`,
+    duration: 2000
+  });
+  
   // Perform the update immediately to improve responsiveness
-  setTimeout(() => {
-    setOrders(prev => optimizeBatchOrderUpdate(prev, orderId, status));
+  setOrders(prev => {
+    // Check if order exists and status is different
+    const orderExists = prev.some(o => o.id === orderId && o.status !== status);
+    if (!orderExists) return prev;
     
-    // Show toast notification without blocking the main thread
+    // Use optimized batch update
+    return optimizeBatchOrderUpdate(prev, orderId, status);
+  });
+  
+  // Show toast notification without blocking the main thread
+  setTimeout(() => {
     const statusMessages = {
       'confirmed': 'Order confirmed by waiter',
       'preparing': 'Chef has started preparing your order',
@@ -91,39 +113,41 @@ export const handleUpdateOrderStatus = (
       'completed': 'Order completed',
     };
     
-    toast.success(statusMessages[status] || `Order status updated to ${status}`);
-    
-    // Handle auto-completion of orders
-    if (status === 'served') {
-      // Auto-complete orders after they've been served for a while (60 seconds)
-      setTimeout(() => {
-        setOrders(prev => {
-          // First check if the order still exists and is still in served status
-          const orderIndex = prev.findIndex(order => order.id === orderId && order.status === 'served');
-          if (orderIndex === -1) return prev;
-          
-          // Use optimized batch update
-          console.log(`Auto-completing served order ${orderId}`);
-          return optimizeBatchOrderUpdate(prev, orderId, 'completed');
-        });
+    toast.success(statusMessages[status] || `Order status updated to ${status}`, {
+      id: `toast-${orderId}-${status}`,
+    });
+  }, 500);
+  
+  // Handle auto-completion of orders
+  if (status === 'served') {
+    // Auto-complete orders after they've been served for a while (60 seconds)
+    setTimeout(() => {
+      setOrders(prev => {
+        // First check if the order still exists and is still in served status
+        const orderIndex = prev.findIndex(order => order.id === orderId && order.status === 'served');
+        if (orderIndex === -1) return prev;
         
-        toast.success('Your order has been completed');
-      }, 60000); // 60 seconds
-    }
-    
-    // Only logout customer when admin manually completes the order from admin panel
-    if (status === 'completed' && setCurrentCustomer) {
-      // Check if this is an admin/staff action or a customer action
-      const isCustomerAction = document.location.pathname.includes('/customer');
+        // Use optimized batch update
+        console.log(`Auto-completing served order ${orderId}`);
+        return optimizeBatchOrderUpdate(prev, orderId, 'completed');
+      });
       
-      // Only trigger the auto-logout if this is NOT a customer action
-      if (!isCustomerAction) {
-        // Add a larger delay before logout to prevent UI issues
-        setTimeout(() => {
-          setCurrentCustomer(null);
-          toast.success('Thank you for dining with us!');
-        }, 2000);
-      }
+      toast.success('Your order has been completed');
+    }, 60000); // 60 seconds
+  }
+  
+  // Only logout customer when admin manually completes the order from admin panel
+  if (status === 'completed' && setCurrentCustomer) {
+    // Check if this is an admin/staff action or a customer action
+    const isCustomerAction = document.location.pathname.includes('/customer');
+    
+    // Only trigger the auto-logout if this is NOT a customer action
+    if (!isCustomerAction) {
+      // Add a larger delay before logout to prevent UI issues
+      setTimeout(() => {
+        setCurrentCustomer(null);
+        toast.success('Thank you for dining with us!');
+      }, 2000);
     }
-  }, 0);
+  }
 };

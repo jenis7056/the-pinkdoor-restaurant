@@ -64,31 +64,37 @@ export const debounce = <T extends (...args: any[]) => any>(callback: T, delay =
 };
 
 /**
- * Improved throttle implementation with better performance
+ * Improved throttle implementation with better performance and immediate execution
  * @param callback Function to throttle
  * @param limit Time limit in milliseconds
  */
 export const throttle = <T extends (...args: any[]) => any>(callback: T, limit = 300): ((...args: Parameters<T>) => void) => {
+  let lastRan = 0;
   let inThrottle = false;
-  let lastFunc: ReturnType<typeof setTimeout>;
-  let lastRan: number;
+  let lastArgs: Parameters<T> | null = null;
+  let lastThis: any = null;
   
   return function(this: any, ...args: Parameters<T>) {
+    lastArgs = args;
+    lastThis = this;
+    
+    const now = Date.now();
+    
     if (!inThrottle) {
+      // First execution runs immediately
       callback.apply(this, args);
-      lastRan = Date.now();
+      lastRan = now;
       inThrottle = true;
+      
       setTimeout(() => {
         inThrottle = false;
-      }, limit);
-    } else {
-      clearTimeout(lastFunc);
-      lastFunc = setTimeout(() => {
-        if (Date.now() - lastRan >= limit) {
-          callback.apply(this, args);
-          lastRan = Date.now();
+        // Run with the most recent arguments if there were any during throttle
+        if (lastArgs) {
+          (throttle(callback, limit)).apply(lastThis, lastArgs);
+          lastArgs = null;
+          lastThis = null;
         }
-      }, limit - (Date.now() - lastRan));
+      }, limit);
     }
   } as (...args: Parameters<T>) => void;
 };
@@ -146,3 +152,28 @@ export class ComputeCache {
 
 // Create a global computation cache instance
 export const computeCache = new ComputeCache();
+
+// Global indicator for in-progress updates to prevent duplicate status changes
+const processingOrderIds = new Set<string>();
+
+/**
+ * Check if an order is currently being processed
+ * @param orderId ID of the order to check
+ * @returns Boolean indicating if the order is being processed
+ */
+export const isOrderProcessing = (orderId: string): boolean => {
+  return processingOrderIds.has(orderId);
+};
+
+/**
+ * Mark an order as being processed
+ * @param orderId ID of the order to mark
+ * @param duration Duration in ms to consider the order in processing state
+ */
+export const markOrderProcessing = (orderId: string, duration = 3000): void => {
+  processingOrderIds.add(orderId);
+  
+  setTimeout(() => {
+    processingOrderIds.delete(orderId);
+  }, duration);
+};

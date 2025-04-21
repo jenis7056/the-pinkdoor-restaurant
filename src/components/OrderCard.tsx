@@ -17,10 +17,12 @@ import {
   X,
   Minus,
   Plus,
-  Trash
+  Trash,
+  Loader2
 } from "lucide-react";
 import { useApp } from "@/contexts/AppContext";
 import { handleCancelOrder } from "@/contexts/orderHelpers";
+import { isOrderProcessing } from "@/contexts/orderOptimizer";
 
 interface OrderCardProps {
   order: Order;
@@ -31,8 +33,11 @@ interface OrderCardProps {
 const OrderCard = memo(({ order, userRole, updateStatus }: OrderCardProps) => {
   const { orders, setOrders } = useApp();
   const [showDetails, setShowDetails] = useState(false);
-  const [isProcessing, setIsProcessing] = useState(false);
+  const [isLocalProcessing, setIsLocalProcessing] = useState(false);
   const processingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Check if order is being processed globally
+  const isProcessing = isLocalProcessing || isOrderProcessing(order.id);
 
   const statusIcons = {
     pending: <CircleDashed className="h-5 w-5 mr-2" />,
@@ -80,6 +85,14 @@ const OrderCard = memo(({ order, userRole, updateStatus }: OrderCardProps) => {
         return false;
     }
   }, []);
+
+  // Reset processing state when order status changes
+  useEffect(() => {
+    setIsLocalProcessing(false);
+    if (processingTimeoutRef.current) {
+      clearTimeout(processingTimeoutRef.current);
+    }
+  }, [order.status]);
 
   const updateItemQuantity = useCallback((itemId: string, delta: number) => {
     if (order.status !== 'pending') {
@@ -142,28 +155,34 @@ const OrderCard = memo(({ order, userRole, updateStatus }: OrderCardProps) => {
 
   const handleStatusUpdate = useCallback(() => {
     // Prevent multiple clicks
-    if (isProcessing) return;
+    if (isProcessing) {
+      toast.error("Please wait, order update in progress...");
+      return;
+    }
     
     const nextStatus = getNextStatus();
     if (!nextStatus || !updateStatus) return;
     
     if (canUpdateStatus(userRole, order.status, nextStatus)) {
-      setIsProcessing(true);
+      // Set local processing state
+      setIsLocalProcessing(true);
       
       // Visual feedback that button was clicked
-      toast.loading(`Updating order to ${nextStatus}...`);
+      toast.loading(`Updating order to ${nextStatus}...`, {
+        id: `updating-${order.id}`
+      });
       
       // Call the update function
       updateStatus(order.id, nextStatus);
       
-      // Reset processing state after a delay to prevent multiple clicks
+      // Reset local processing state after a delay
       if (processingTimeoutRef.current) {
         clearTimeout(processingTimeoutRef.current);
       }
       
       processingTimeoutRef.current = setTimeout(() => {
-        setIsProcessing(false);
-      }, 3000); // 3 second cooldown
+        setIsLocalProcessing(false);
+      }, 5000); // 5 second cooldown
     }
   }, [isProcessing, getNextStatus, canUpdateStatus, userRole, order.status, order.id, updateStatus]);
 
@@ -175,10 +194,17 @@ const OrderCard = memo(({ order, userRole, updateStatus }: OrderCardProps) => {
       return (
         <Button 
           onClick={handleStatusUpdate}
-          className={`bg-pink-700 hover:bg-pink-800 text-white ${isProcessing ? 'opacity-70 cursor-not-allowed' : ''}`}
+          className={`bg-pink-700 hover:bg-pink-800 text-white`}
           disabled={isProcessing}
         >
-          {isProcessing ? 'Processing...' : `Mark as ${nextStatus.charAt(0).toUpperCase() + nextStatus.slice(1)}`}
+          {isProcessing ? (
+            <>
+              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+              Processing...
+            </>
+          ) : (
+            `Mark as ${nextStatus.charAt(0).toUpperCase() + nextStatus.slice(1)}`
+          )}
         </Button>
       );
     }
@@ -313,6 +339,7 @@ const OrderCard = memo(({ order, userRole, updateStatus }: OrderCardProps) => {
               size="sm"
               onClick={handleCancel}
               className="bg-red-600 hover:bg-red-700"
+              disabled={isProcessing}
             >
               <X className="h-4 w-4 mr-2" />
               Cancel Order
