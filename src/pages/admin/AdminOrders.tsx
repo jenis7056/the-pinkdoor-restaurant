@@ -1,5 +1,5 @@
 
-import { useState, useMemo, useCallback } from "react";
+import { useState, useEffect, useMemo, useCallback, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import Layout from "@/components/Layout";
 import OrderCard from "@/components/OrderCard";
@@ -9,46 +9,92 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import { ArrowLeft, Search, ShoppingBag } from "lucide-react";
 import { OrderStatus } from "@/types";
-import { optimizeFilter } from "@/contexts/orderOptimizer";
+import { optimizeFilter, throttle, computeCache } from "@/contexts/orderOptimizer";
 
 const AdminOrders = () => {
   const [activeTab, setActiveTab] = useState<OrderStatus | "all" | "active">("active");
   const [searchQuery, setSearchQuery] = useState("");
   const navigate = useNavigate();
   const { orders, updateOrderStatus, currentUser } = useApp();
+  const prevOrdersRef = useRef(orders);
   
   // Redirect if not logged in as admin
-  if (!currentUser || currentUser.role !== "admin") {
-    navigate("/login");
-    return null;
-  }
+  useEffect(() => {
+    if (!currentUser || currentUser.role !== "admin") {
+      navigate("/login");
+      return;
+    }
+  }, [currentUser, navigate]);
 
-  // Memoize filtered orders to prevent unnecessary recalculations
-  const filteredOrders = useMemo(() => {
-    if (searchQuery.length === 0) return orders;
+  // Custom equality check for orders array to prevent unnecessary re-renders
+  const stableOrders = useMemo(() => {
+    // Only update reference if orders have actually changed in a meaningful way
+    const hasChanged = orders.length !== prevOrdersRef.current.length || 
+      orders.some((order, idx) => {
+        const prevOrder = prevOrdersRef.current[idx];
+        // If the order is new or status has changed
+        return !prevOrder || order.status !== prevOrder.status || order.id !== prevOrder.id;
+      });
     
-    return optimizeFilter(orders, order => 
-      order.customerName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      order.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      order.tableNumber.toString().includes(searchQuery)
+    if (hasChanged) {
+      prevOrdersRef.current = orders;
+      return orders;
+    }
+    return prevOrdersRef.current;
+  }, [orders]);
+
+  // Cache filter results for better performance
+  const getFilteredOrders = useCallback((query: string, ordersList: typeof orders) => {
+    if (query.length === 0) return ordersList;
+    
+    const cacheKey = `admin_filtered_${query}_${ordersList.length}`;
+    const cached = computeCache.get<typeof orders>(cacheKey);
+    if (cached) return cached;
+    
+    const result = optimizeFilter(ordersList, order => 
+      order.customerName.toLowerCase().includes(query.toLowerCase()) ||
+      order.id.toLowerCase().includes(query.toLowerCase()) ||
+      order.tableNumber.toString().includes(query)
     );
-  }, [orders, searchQuery]);
+    
+    computeCache.set(cacheKey, result, 3000); // Cache for 3 seconds
+    return result;
+  }, []);
 
-  // Memoize orders filtered by status
-  const getOrdersByStatus = useCallback((status: string) => {
-    if (status === "all") return filteredOrders;
-    if (status === "active") return filteredOrders.filter(order => order.status !== "completed");
-    return filteredOrders.filter(order => order.status === status);
-  }, [filteredOrders]);
-
-  const ordersToDisplay = useMemo(() => 
-    getOrdersByStatus(activeTab), 
-    [activeTab, getOrdersByStatus]
+  // Memoize filtered orders with cache
+  const filteredOrders = useMemo(() => 
+    getFilteredOrders(searchQuery, stableOrders),
+    [searchQuery, stableOrders, getFilteredOrders]
   );
 
-  const handleUpdateStatus = useCallback((orderId: string, status: OrderStatus) => {
+  // Memoize orders filtered by status using useCallback and cache results
+  const getOrdersByStatus = useCallback((status: string, filtered: typeof orders) => {
+    const cacheKey = `admin_status_${status}_${filtered.length}`;
+    const cached = computeCache.get<typeof orders>(cacheKey);
+    if (cached) return cached;
+    
+    let result;
+    if (status === "all") {
+      result = filtered;
+    } else if (status === "active") {
+      result = optimizeFilter(filtered, order => order.status !== "completed");
+    } else {
+      result = optimizeFilter(filtered, order => order.status === status);
+    }
+    
+    computeCache.set(cacheKey, result, 2000); // Cache for 2 seconds
+    return result;
+  }, []);
+
+  const ordersToDisplay = useMemo(() => 
+    getOrdersByStatus(activeTab, filteredOrders), 
+    [activeTab, filteredOrders, getOrdersByStatus]
+  );
+
+  // Throttle the handler to prevent UI freezes on rapid clicks
+  const handleUpdateStatus = useCallback(throttle((orderId: string, status: OrderStatus) => {
     updateOrderStatus(orderId, status);
-  }, [updateOrderStatus]);
+  }, 1000), [updateOrderStatus]);
 
   const handleTabChange = useCallback((value: string) => {
     setActiveTab(value as OrderStatus | "all" | "active");
@@ -90,7 +136,7 @@ const AdminOrders = () => {
         </div>
 
         <Tabs defaultValue="active" value={activeTab} onValueChange={handleTabChange}>
-          <TabsList className="bg-pink-50 mb-8">
+          <TabsList className="bg-pink-50 mb-8 flex flex-wrap">
             <TabsTrigger 
               value="active" 
               className="data-[state=active]:bg-white"

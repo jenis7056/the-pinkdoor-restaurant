@@ -1,7 +1,7 @@
 
 import { Customer, OrderItem, Order, OrderStatus } from "@/types";
 import { toast } from "sonner";
-import { optimizeBatchOrderUpdate, throttle, debounce } from "./orderOptimizer";
+import { optimizeBatchOrderUpdate, throttle, debounce, computeCache } from "./orderOptimizer";
 
 export const handleCreateOrder = (
   items: OrderItem[],
@@ -61,7 +61,7 @@ export const handleCancelOrder = (
   toast.success('Order cancelled successfully');
 };
 
-// Increase throttle time to prevent rapid consecutive updates
+// High performance order status update - increased throttle to prevent UI freezes
 export const handleUpdateOrderStatus = throttle((
   orderId: string, 
   status: OrderStatus,
@@ -70,10 +70,24 @@ export const handleUpdateOrderStatus = throttle((
 ) => {
   console.log("Updating order status:", orderId, status);
   
-  // Optimize state updates by using our optimized batch update
-  setOrders(prev => optimizeBatchOrderUpdate(prev, orderId, status));
+  // Check cache first - don't perform the same update multiple times in a short period
+  const cacheKey = `order_update_${orderId}_${status}`;
+  if (computeCache.get(cacheKey)) {
+    console.log("Skipping duplicate update (cached):", orderId, status);
+    return;
+  }
+  computeCache.set(cacheKey, true, 1000); // Cache for 1 second
   
-  // Small delay to prevent UI jank during toast display
+  // Optimize state updates by using our optimized batch update
+  // Use a normal function instead of immediately updating state
+  const updateOrderInState = () => {
+    setOrders(prev => optimizeBatchOrderUpdate(prev, orderId, status));
+  };
+  
+  // Schedule the update with requestAnimationFrame for better performance
+  requestAnimationFrame(updateOrderInState);
+  
+  // Show toast notification without blocking the main thread
   setTimeout(() => {
     const statusMessages = {
       'confirmed': 'Order confirmed by waiter',
@@ -84,7 +98,7 @@ export const handleUpdateOrderStatus = throttle((
     };
     
     toast.success(statusMessages[status] || `Order status updated to ${status}`);
-  }, 50);
+  }, 100);
   
   // Debounce the auto-completion of orders to reduce unnecessary re-renders
   if (status === 'served') {
@@ -99,7 +113,7 @@ export const handleUpdateOrderStatus = throttle((
       });
       
       toast.success('Your order has been completed');
-    }, 300);
+    }, 500);
     
     // Auto-complete orders after they've been served for a while (60 seconds)
     setTimeout(() => {
@@ -115,13 +129,13 @@ export const handleUpdateOrderStatus = throttle((
     
     // Only trigger the auto-logout if this is NOT a customer action
     if (!isCustomerAction) {
-      // Add a small delay before logout to prevent UI issues
+      // Add a larger delay before logout to prevent UI issues
       const logoutCustomer = debounce(() => {
         setCurrentCustomer(null);
         toast.success('Thank you for dining with us!');
-      }, 200);
+      }, 500);
       
-      setTimeout(logoutCustomer, 1500);
+      setTimeout(logoutCustomer, 2000);
     }
   }
-}, 500); // Increased from 300ms to 500ms for better performance
+}, 1000); // Increased from 500ms to 1000ms for better performance

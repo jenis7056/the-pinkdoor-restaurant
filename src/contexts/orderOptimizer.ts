@@ -21,8 +21,8 @@ export const optimizeBatchOrderUpdate = (
     return orders;
   }
   
-  // Create a shallow copy of the array
-  const newOrders = [...orders];
+  // Use slice instead of spread operator for better performance
+  const newOrders = orders.slice();
   
   // Update only the needed order directly by index - more efficient than map
   newOrders[orderIndex] = { 
@@ -48,7 +48,7 @@ export const optimizeFilter = <T>(items: T[], predicate: (item: T) => boolean): 
 };
 
 /**
- * Debounces an operation to prevent too many updates
+ * Improved debounce implementation with better performance
  * @param callback Function to debounce
  * @param delay Delay in milliseconds
  */
@@ -56,7 +56,7 @@ export const debounce = <T extends (...args: any[]) => any>(callback: T, delay =
   let timeoutId: ReturnType<typeof setTimeout>;
   
   return (...args: Parameters<T>) => {
-    clearTimeout(timeoutId);
+    if (timeoutId) clearTimeout(timeoutId);
     timeoutId = setTimeout(() => {
       callback(...args);
     }, delay);
@@ -64,31 +64,34 @@ export const debounce = <T extends (...args: any[]) => any>(callback: T, delay =
 };
 
 /**
- * Throttles a function to limit how often it can be called
+ * Improved throttle implementation with better performance
  * @param callback Function to throttle
  * @param limit Time limit in milliseconds
  */
 export const throttle = <T extends (...args: any[]) => any>(callback: T, limit = 300): ((...args: Parameters<T>) => void) => {
   let waiting = false;
   let lastArgs: Parameters<T> | null = null;
+  let lastThis: any = null;
   
-  return (...args: Parameters<T>) => {
-    if (waiting) {
-      lastArgs = args;
-      return;
+  const timeoutFunction = function(this: any) {
+    waiting = false;
+    if (lastArgs) {
+      callback.apply(lastThis, lastArgs);
+      lastArgs = null;
+      lastThis = null;
     }
-    
-    callback(...args);
-    waiting = true;
-    
-    setTimeout(() => {
-      waiting = false;
-      if (lastArgs) {
-        callback(...lastArgs);
-        lastArgs = null;
-      }
-    }, limit);
   };
+  
+  return function(this: any, ...args: Parameters<T>) {
+    if (!waiting) {
+      callback.apply(this, args);
+      waiting = true;
+      setTimeout(timeoutFunction, limit);
+    } else {
+      lastArgs = args;
+      lastThis = this;
+    }
+  } as (...args: Parameters<T>) => void;
 };
 
 /**
@@ -110,3 +113,37 @@ export const memoize = <T extends (...args: any[]) => any>(fn: T): T => {
     return result;
   }) as T;
 };
+
+/**
+ * Cache for storing computed values with timeout
+ * Prevents excessive computation in rapid updates
+ */
+export class ComputeCache {
+  private cache = new Map<string, { value: any, expires: number }>();
+  
+  get<T>(key: string): T | null {
+    const item = this.cache.get(key);
+    if (!item) return null;
+    
+    if (Date.now() > item.expires) {
+      this.cache.delete(key);
+      return null;
+    }
+    
+    return item.value as T;
+  }
+  
+  set<T>(key: string, value: T, ttl = 5000): void {
+    this.cache.set(key, {
+      value,
+      expires: Date.now() + ttl
+    });
+  }
+  
+  clear(): void {
+    this.cache.clear();
+  }
+}
+
+// Create a global computation cache instance
+export const computeCache = new ComputeCache();

@@ -1,5 +1,5 @@
 
-import { useState, useEffect, useMemo, useCallback } from "react";
+import { useState, useEffect, useMemo, useCallback, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import Layout from "@/components/Layout";
 import OrderCard from "@/components/OrderCard";
@@ -9,13 +9,14 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import { Search, ShoppingBag } from "lucide-react";
 import { OrderStatus } from "@/types";
-import { optimizeFilter } from "@/contexts/orderOptimizer";
+import { optimizeFilter, throttle, computeCache } from "@/contexts/orderOptimizer";
 
 const WaiterHome = () => {
   const [activeTab, setActiveTab] = useState<"pending" | "ready" | "all">("pending");
   const [searchQuery, setSearchQuery] = useState("");
   const navigate = useNavigate();
   const { orders, updateOrderStatus, currentUser } = useApp();
+  const prevOrdersRef = useRef(orders);
   
   // Redirect if not logged in as waiter
   useEffect(() => {
@@ -24,35 +25,78 @@ const WaiterHome = () => {
     }
   }, [currentUser, navigate]);
 
-  // Memoize filtered orders to prevent unnecessary recalculations
-  const filteredOrders = useMemo(() => {
-    if (searchQuery.length === 0) return orders;
+  // Custom equality check for orders array to prevent unnecessary re-renders
+  const stableOrders = useMemo(() => {
+    // Only update reference if orders have actually changed in a meaningful way
+    const hasChanged = orders.length !== prevOrdersRef.current.length || 
+      orders.some((order, idx) => {
+        const prevOrder = prevOrdersRef.current[idx];
+        // If the order is new or status has changed
+        return !prevOrder || order.status !== prevOrder.status || order.id !== prevOrder.id;
+      });
     
-    return optimizeFilter(orders, order =>
-      order.customerName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      order.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      order.tableNumber.toString().includes(searchQuery)
-    );
-  }, [orders, searchQuery]);
+    if (hasChanged) {
+      prevOrdersRef.current = orders;
+      return orders;
+    }
+    return prevOrdersRef.current;
+  }, [orders]);
 
-  // Memoize orders filtered by status using useCallback
-  const getOrdersByStatus = useCallback((status: string) => {
-    if (status === "all") return optimizeFilter(filteredOrders, order => order.status !== "completed");
-    if (status === "pending") return optimizeFilter(filteredOrders, order => order.status === "pending");
-    if (status === "ready") return optimizeFilter(filteredOrders, order => order.status === "ready");
-    return filteredOrders;
-  }, [filteredOrders]);
+  // Cache filter results for better performance
+  const getFilteredOrders = useCallback((query: string, ordersList: typeof orders) => {
+    if (query.length === 0) return ordersList;
+    
+    const cacheKey = `waiter_filtered_${query}_${ordersList.length}`;
+    const cached = computeCache.get<typeof orders>(cacheKey);
+    if (cached) return cached;
+    
+    const result = optimizeFilter(ordersList, order =>
+      order.customerName.toLowerCase().includes(query.toLowerCase()) ||
+      order.id.toLowerCase().includes(query.toLowerCase()) ||
+      order.tableNumber.toString().includes(query)
+    );
+    
+    computeCache.set(cacheKey, result, 3000); // Cache for 3 seconds
+    return result;
+  }, []);
+
+  // Memoize filtered orders with cache
+  const filteredOrders = useMemo(() => 
+    getFilteredOrders(searchQuery, stableOrders),
+    [searchQuery, stableOrders, getFilteredOrders]
+  );
+
+  // Memoize orders filtered by status using useCallback and cache results
+  const getOrdersByStatus = useCallback((status: string, filtered: typeof orders) => {
+    const cacheKey = `waiter_status_${status}_${filtered.length}`;
+    const cached = computeCache.get<typeof orders>(cacheKey);
+    if (cached) return cached;
+    
+    let result;
+    if (status === "all") {
+      result = optimizeFilter(filtered, order => order.status !== "completed");
+    } else if (status === "pending") {
+      result = optimizeFilter(filtered, order => order.status === "pending");
+    } else if (status === "ready") {
+      result = optimizeFilter(filtered, order => order.status === "ready");
+    } else {
+      result = filtered;
+    }
+    
+    computeCache.set(cacheKey, result, 2000); // Cache for 2 seconds
+    return result;
+  }, []);
 
   // Memoize displayed orders to prevent unnecessary re-renders
   const ordersToDisplay = useMemo(() => 
-    getOrdersByStatus(activeTab), 
-    [activeTab, getOrdersByStatus]
+    getOrdersByStatus(activeTab, filteredOrders), 
+    [activeTab, filteredOrders, getOrdersByStatus]
   );
 
-  // Memoize handler functions
-  const handleUpdateStatus = useCallback((orderId: string, status: OrderStatus) => {
+  // Throttle the handler to prevent UI freezes on rapid clicks
+  const handleUpdateStatus = useCallback(throttle((orderId: string, status: OrderStatus) => {
     updateOrderStatus(orderId, status);
-  }, [updateOrderStatus]);
+  }, 1000), [updateOrderStatus]);
 
   const handleTabChange = useCallback((val: string) => {
     setActiveTab(val as "pending" | "ready" | "all");
