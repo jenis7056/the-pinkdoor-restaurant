@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import Layout from "@/components/Layout";
 import OrderCard from "@/components/OrderCard";
@@ -9,6 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import { Search, ShoppingBag } from "lucide-react";
 import { OrderStatus } from "@/types";
+import { optimizeFilter } from "@/contexts/orderOptimizer";
 
 const WaiterHome = () => {
   const [activeTab, setActiveTab] = useState<"pending" | "ready" | "all">("pending");
@@ -23,32 +24,43 @@ const WaiterHome = () => {
     }
   }, [currentUser, navigate]);
 
-  // For debugging
-  useEffect(() => {
-    console.log("Current orders in WaiterHome:", orders);
-  }, [orders]);
-
-  // Filter orders based on search query
-  const filteredOrders = orders.filter(
-    (order) =>
+  // Memoize filtered orders to prevent unnecessary recalculations
+  const filteredOrders = useMemo(() => {
+    if (searchQuery.length === 0) return orders;
+    
+    return optimizeFilter(orders, order =>
       order.customerName.toLowerCase().includes(searchQuery.toLowerCase()) ||
       order.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
       order.tableNumber.toString().includes(searchQuery)
+    );
+  }, [orders, searchQuery]);
+
+  // Memoize orders filtered by status using useCallback
+  const getOrdersByStatus = useCallback((status: string) => {
+    if (status === "all") return optimizeFilter(filteredOrders, order => order.status !== "completed");
+    if (status === "pending") return optimizeFilter(filteredOrders, order => order.status === "pending");
+    if (status === "ready") return optimizeFilter(filteredOrders, order => order.status === "ready");
+    return filteredOrders;
+  }, [filteredOrders]);
+
+  // Memoize displayed orders to prevent unnecessary re-renders
+  const ordersToDisplay = useMemo(() => 
+    getOrdersByStatus(activeTab), 
+    [activeTab, getOrdersByStatus]
   );
 
-  // Filter orders based on status
-  const getOrdersByStatus = (status: string) => {
-    if (status === "all") return filteredOrders.filter(order => order.status !== "completed");
-    if (status === "pending") return filteredOrders.filter(order => order.status === "pending");
-    if (status === "ready") return filteredOrders.filter(order => order.status === "ready");
-    return filteredOrders;
-  };
-
-  const ordersToDisplay = getOrdersByStatus(activeTab);
-
-  const handleUpdateStatus = (orderId: string, status: OrderStatus) => {
+  // Memoize handler functions
+  const handleUpdateStatus = useCallback((orderId: string, status: OrderStatus) => {
     updateOrderStatus(orderId, status);
-  };
+  }, [updateOrderStatus]);
+
+  const handleTabChange = useCallback((val: string) => {
+    setActiveTab(val as "pending" | "ready" | "all");
+  }, []);
+
+  const handleSearchChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchQuery(e.target.value);
+  }, []);
 
   return (
     <Layout>
@@ -66,13 +78,13 @@ const WaiterHome = () => {
             <Input
               placeholder="Search orders..."
               value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
+              onChange={handleSearchChange}
               className="pl-10 border-pink-200"
             />
           </div>
         </div>
 
-        <Tabs defaultValue="pending" value={activeTab} onValueChange={(val) => setActiveTab(val as "pending" | "ready" | "all")}>
+        <Tabs defaultValue="pending" value={activeTab} onValueChange={handleTabChange}>
           <TabsList className="bg-pink-50 mb-8">
             <TabsTrigger 
               value="pending" 

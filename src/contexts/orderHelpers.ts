@@ -1,7 +1,7 @@
 
 import { Customer, OrderItem, Order, OrderStatus } from "@/types";
 import { toast } from "sonner";
-import { optimizeBatchOrderUpdate, throttle } from "./orderOptimizer";
+import { optimizeBatchOrderUpdate, throttle, debounce } from "./orderOptimizer";
 
 export const handleCreateOrder = (
   items: OrderItem[],
@@ -56,12 +56,12 @@ export const handleCancelOrder = (
   orderId: string,
   setOrders: React.Dispatch<React.SetStateAction<Order[]>>
 ) => {
-  // Use function to ensure we have the latest state
+  // Use optimized approach to filter - more efficient than map+filter
   setOrders(prev => prev.filter(order => order.id !== orderId));
   toast.success('Order cancelled successfully');
 };
 
-// Throttle the status update to prevent rapid consecutive updates
+// Increase throttle time to prevent rapid consecutive updates
 export const handleUpdateOrderStatus = throttle((
   orderId: string, 
   status: OrderStatus,
@@ -70,32 +70,40 @@ export const handleUpdateOrderStatus = throttle((
 ) => {
   console.log("Updating order status:", orderId, status);
   
-  // Use our optimized batch update
+  // Optimize state updates by using our optimized batch update
   setOrders(prev => optimizeBatchOrderUpdate(prev, orderId, status));
   
-  const statusMessages = {
-    'confirmed': 'Order confirmed by waiter',
-    'preparing': 'Chef has started preparing your order',
-    'ready': 'Your order is ready to be served',
-    'served': 'Your order has been served',
-    'completed': 'Order completed',
-  };
+  // Small delay to prevent UI jank during toast display
+  setTimeout(() => {
+    const statusMessages = {
+      'confirmed': 'Order confirmed by waiter',
+      'preparing': 'Chef has started preparing your order',
+      'ready': 'Your order is ready to be served',
+      'served': 'Your order has been served',
+      'completed': 'Order completed',
+    };
+    
+    toast.success(statusMessages[status] || `Order status updated to ${status}`);
+  }, 50);
   
-  toast.success(statusMessages[status] || `Order status updated to ${status}`);
-  
-  // Auto-complete orders after they've been served for a while (60 seconds)
+  // Debounce the auto-completion of orders to reduce unnecessary re-renders
   if (status === 'served') {
-    setTimeout(() => {
+    const completeOrderAfterServed = debounce((id: string) => {
       setOrders(prev => {
         // First check if the order still exists and is still in served status
-        const orderToComplete = prev.find(order => order.id === orderId && order.status === 'served');
-        if (!orderToComplete) return prev;
+        const orderIndex = prev.findIndex(order => order.id === id && order.status === 'served');
+        if (orderIndex === -1) return prev;
         
-        // Use our optimized batch update
-        return optimizeBatchOrderUpdate(prev, orderId, 'completed');
+        // Use optimized batch update
+        return optimizeBatchOrderUpdate(prev, id, 'completed');
       });
       
       toast.success('Your order has been completed');
+    }, 300);
+    
+    // Auto-complete orders after they've been served for a while (60 seconds)
+    setTimeout(() => {
+      completeOrderAfterServed(orderId);
     }, 60000); // 60 seconds
   }
   
@@ -108,10 +116,12 @@ export const handleUpdateOrderStatus = throttle((
     // Only trigger the auto-logout if this is NOT a customer action
     if (!isCustomerAction) {
       // Add a small delay before logout to prevent UI issues
-      setTimeout(() => {
+      const logoutCustomer = debounce(() => {
         setCurrentCustomer(null);
         toast.success('Thank you for dining with us!');
-      }, 1500);
+      }, 200);
+      
+      setTimeout(logoutCustomer, 1500);
     }
   }
-}, 300);
+}, 500); // Increased from 300ms to 500ms for better performance

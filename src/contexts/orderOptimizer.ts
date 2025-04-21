@@ -14,23 +14,24 @@ export const optimizeBatchOrderUpdate = (
   status: OrderStatus
 ): Order[] => {
   // Find the order to update first to avoid unnecessary iterations
-  const orderToUpdate = orders.find(order => order.id === orderId);
+  const orderIndex = orders.findIndex(order => order.id === orderId);
   
   // If order doesn't exist or status is already the same, return original array
-  if (!orderToUpdate || orderToUpdate.status === status) {
+  if (orderIndex === -1 || orders[orderIndex].status === status) {
     return orders;
   }
   
-  // Only map through array if we need to make a change
-  return orders.map(order => 
-    order.id === orderId 
-      ? { 
-          ...order, 
-          status, 
-          updatedAt: new Date().toISOString() 
-        } 
-      : order
-  );
+  // Create a shallow copy of the array
+  const newOrders = [...orders];
+  
+  // Update only the needed order directly by index - more efficient than map
+  newOrders[orderIndex] = { 
+    ...orders[orderIndex], 
+    status, 
+    updatedAt: new Date().toISOString() 
+  };
+  
+  return newOrders;
 };
 
 /**
@@ -88,4 +89,24 @@ export const throttle = <T extends (...args: any[]) => any>(callback: T, limit =
       }
     }, limit);
   };
+};
+
+/**
+ * Memoizes a function to avoid recalculating results for the same inputs
+ * @param fn Function to memoize
+ * @returns Memoized function
+ */
+export const memoize = <T extends (...args: any[]) => any>(fn: T): T => {
+  const cache = new Map();
+  
+  return ((...args: Parameters<T>) => {
+    const key = JSON.stringify(args);
+    if (cache.has(key)) {
+      return cache.get(key);
+    }
+    
+    const result = fn(...args);
+    cache.set(key, result);
+    return result;
+  }) as T;
 };

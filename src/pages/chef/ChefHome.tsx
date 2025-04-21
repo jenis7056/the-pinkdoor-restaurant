@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useMemo, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import Layout from "@/components/Layout";
 import OrderCard from "@/components/OrderCard";
@@ -9,6 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import { Search, ShoppingBag } from "lucide-react";
 import { OrderStatus } from "@/types";
+import { optimizeFilter } from "@/contexts/orderOptimizer";
 
 const ChefHome = () => {
   const [activeTab, setActiveTab] = useState<"confirmed" | "preparing" | "all">("confirmed");
@@ -22,31 +23,45 @@ const ChefHome = () => {
     return null;
   }
 
-  // Filter orders based on search query
-  const filteredOrders = orders.filter(
-    (order) =>
+  // Memoize filtered orders to prevent unnecessary recalculations
+  const filteredOrders = useMemo(() => {
+    if (searchQuery.length === 0) return orders;
+    
+    return optimizeFilter(orders, order =>
       order.customerName.toLowerCase().includes(searchQuery.toLowerCase()) ||
       order.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
       order.tableNumber.toString().includes(searchQuery)
+    );
+  }, [orders, searchQuery]);
+
+  // Memoize orders filtered by status using useCallback
+  const getOrdersByStatus = useCallback((status: string) => {
+    if (status === "all") {
+      return optimizeFilter(filteredOrders, order => ["confirmed", "preparing"].includes(order.status));
+    }
+    if (status === "confirmed") return optimizeFilter(filteredOrders, order => order.status === "confirmed");
+    if (status === "preparing") return optimizeFilter(filteredOrders, order => order.status === "preparing");
+    return filteredOrders;
+  }, [filteredOrders]);
+
+  // Memoize displayed orders to prevent unnecessary re-renders
+  const ordersToDisplay = useMemo(() => 
+    getOrdersByStatus(activeTab), 
+    [activeTab, getOrdersByStatus]
   );
 
-  // Filter orders based on status
-  const getOrdersByStatus = (status: string): typeof orders => {
-    if (status === "all") {
-      return filteredOrders.filter(
-        order => ["confirmed", "preparing"].includes(order.status)
-      );
-    }
-    if (status === "confirmed") return filteredOrders.filter(order => order.status === "confirmed");
-    if (status === "preparing") return filteredOrders.filter(order => order.status === "preparing");
-    return filteredOrders;
-  };
-
-  const ordersToDisplay = getOrdersByStatus(activeTab);
-
-  const handleUpdateStatus = (orderId: string, status: OrderStatus) => {
+  // Memoize handler functions
+  const handleUpdateStatus = useCallback((orderId: string, status: OrderStatus) => {
     updateOrderStatus(orderId, status);
-  };
+  }, [updateOrderStatus]);
+
+  const handleTabChange = useCallback((val: string) => {
+    setActiveTab(val as "confirmed" | "preparing" | "all");
+  }, []);
+
+  const handleSearchChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchQuery(e.target.value);
+  }, []);
 
   return (
     <Layout>
@@ -64,13 +79,13 @@ const ChefHome = () => {
             <Input
               placeholder="Search orders..."
               value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
+              onChange={handleSearchChange}
               className="pl-10 border-pink-200"
             />
           </div>
         </div>
 
-        <Tabs defaultValue="confirmed" value={activeTab} onValueChange={(val) => setActiveTab(val as "confirmed" | "preparing" | "all")}>
+        <Tabs defaultValue="confirmed" value={activeTab} onValueChange={handleTabChange}>
           <TabsList className="bg-pink-50 mb-8">
             <TabsTrigger 
               value="confirmed" 
