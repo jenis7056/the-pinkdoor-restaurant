@@ -3,6 +3,23 @@ import { Customer, OrderItem, Order, OrderStatus } from "@/types";
 import { toast } from "sonner";
 import { optimizeBatchOrderUpdate, throttle, debounce, computeCache, markOrderProcessing, isOrderProcessing, clearProcessingState } from "./orderOptimizer";
 
+// Track recent operations to prevent duplicates
+const recentOperations = new Map<string, number>();
+
+// Helper to prevent duplicate operations
+function preventDuplicateOperation(key: string, timeWindowMs: number = 2000): boolean {
+  const now = Date.now();
+  const lastTime = recentOperations.get(key) || 0;
+  
+  if (now - lastTime < timeWindowMs) {
+    console.log(`Duplicate operation prevented: ${key}`);
+    return false;
+  }
+  
+  recentOperations.set(key, now);
+  return true;
+}
+
 export const handleCreateOrder = (
   items: OrderItem[],
   currentCustomer: Customer | null,
@@ -11,6 +28,13 @@ export const handleCreateOrder = (
 ) => {
   if (!currentCustomer) {
     toast.error('No customer is logged in');
+    return;
+  }
+  
+  // Prevent duplicate order creation
+  const orderKey = `order-create-${currentCustomer.id}-${Date.now()}`;
+  if (!preventDuplicateOperation(orderKey)) {
+    toast.error('Please wait, your previous order is being processed');
     return;
   }
   
@@ -33,10 +57,14 @@ export const handleCreateOrder = (
   };
   
   console.log("Creating new order:", newOrder);
+  
   // Use functional update to avoid stale state
   setOrders(prev => [...prev, newOrder]);
   setCart([]); // Clear the cart after ordering
-  toast.success('Your order has been placed successfully!');
+  
+  toast.success('Your order has been placed successfully!', {
+    id: `order-success-${newOrder.id}`, // Prevent duplicate toasts
+  });
   
   // Set a timeout to remove cancel ability after 2 minutes
   setTimeout(() => {
@@ -56,12 +84,22 @@ export const handleCancelOrder = (
   orderId: string,
   setOrders: React.Dispatch<React.SetStateAction<Order[]>>
 ) => {
+  // Prevent duplicate cancels
+  const cancelKey = `cancel-${orderId}`;
+  if (!preventDuplicateOperation(cancelKey, 5000)) {
+    toast.error('Please wait, your cancellation is being processed');
+    return;
+  }
+  
   // Clear processing state first to ensure cancellation works
   clearProcessingState(orderId);
   
   // Use optimized approach to filter - more efficient than map+filter
   setOrders(prev => prev.filter(order => order.id !== orderId));
-  toast.success('Order cancelled successfully');
+  
+  toast.success('Order cancelled successfully', {
+    id: `cancel-success-${orderId}`, // Prevent duplicate toasts
+  });
 };
 
 // High performance order status update with improved reliability
@@ -73,12 +111,18 @@ export const handleUpdateOrderStatus = (
 ) => {
   console.log("Updating order status:", orderId, status);
   
+  // Create a unique key for this specific update operation
+  const updateKey = `update-${orderId}-${status}-${Date.now()}`;
+  
+  // Prevent duplicate updates with status-specific throttling
+  if (!preventDuplicateOperation(updateKey, 3000)) {
+    console.log(`Prevented duplicate status update for ${orderId}`);
+    return;
+  }
+  
   // Prevent duplicate updates - global check using shared state
   if (isOrderProcessing(orderId)) {
     console.log("Skipping duplicate update (already processing):", orderId, status);
-    toast.error("Please wait, this order is currently being updated", {
-      id: `duplicate-${orderId}`
-    });
     return;
   }
   
@@ -89,17 +133,15 @@ export const handleUpdateOrderStatus = (
   const cacheKey = `order_update_${orderId}_${status}`;
   if (computeCache.get(cacheKey)) {
     console.log("Skipping duplicate update (cached):", orderId, status);
-    toast.error("Please wait, this order was just updated", {
-      id: `cached-${orderId}`
-    });
     return;
   }
   
   computeCache.set(cacheKey, true, 2000); // Cache for 2 seconds to prevent rapid clicks
   
-  // Show visual feedback immediately
+  // Show visual feedback immediately with a unique ID to prevent duplicate toasts
+  const toastId = `toast-${orderId}-${status}-${Date.now()}`;
   toast.loading(`Updating order to ${status}...`, {
-    id: `toast-${orderId}-${status}`,
+    id: toastId,
     duration: 2000
   });
   
@@ -109,6 +151,12 @@ export const handleUpdateOrderStatus = (
     const order = prev.find(o => o.id === orderId);
     if (!order) {
       console.error(`Order ${orderId} not found`);
+      return prev;
+    }
+    
+    // Skip update if the status is already set (idempotent operation)
+    if (order.status === status) {
+      console.log(`Order ${orderId} already has status ${status}, skipping update`);
       return prev;
     }
     
@@ -139,7 +187,7 @@ export const handleUpdateOrderStatus = (
     };
     
     toast.success(statusMessages[status] || `Order status updated to ${status}`, {
-      id: `toast-${orderId}-${status}`,
+      id: toastId,
     });
   }, 500);
   
@@ -157,7 +205,9 @@ export const handleUpdateOrderStatus = (
         return optimizeBatchOrderUpdate(prev, orderId, 'completed');
       });
       
-      toast.success('Your order has been completed');
+      toast.success('Your order has been completed', {
+        id: `auto-complete-${orderId}`,
+      });
     }, 60000); // 60 seconds
   }
   
@@ -171,8 +221,26 @@ export const handleUpdateOrderStatus = (
       // Add a larger delay before logout to prevent UI issues
       setTimeout(() => {
         setCurrentCustomer(null);
-        toast.success('Thank you for dining with us!');
+        toast.success('Thank you for dining with us!', {
+          id: `logout-${orderId}`,
+        });
       }, 2000);
     }
   }
 };
+
+// Function to clean up stale operation records
+// Can be called periodically to prevent memory leaks
+export function cleanupOperationsCache() {
+  const now = Date.now();
+  const staleThreshold = 60 * 60 * 1000; // 1 hour
+  
+  recentOperations.forEach((timestamp, key) => {
+    if (now - timestamp > staleThreshold) {
+      recentOperations.delete(key);
+    }
+  });
+}
+
+// Set up automatic cleanup every hour
+setInterval(cleanupOperationsCache, 3600000);

@@ -125,6 +125,14 @@ export const memoize = <T extends (...args: any[]) => any>(fn: T): T => {
  */
 export class ComputeCache {
   private cache = new Map<string, { value: any, expires: number }>();
+  private maxSize: number;
+  
+  constructor(maxSize: number = 100) {
+    this.maxSize = maxSize;
+    
+    // Set up periodic cleanup to prevent memory leaks
+    setInterval(() => this.cleanup(), 60000); // Run cleanup every minute
+  }
   
   get<T>(key: string): T | null {
     const item = this.cache.get(key);
@@ -139,6 +147,12 @@ export class ComputeCache {
   }
   
   set<T>(key: string, value: T, ttl = 5000): void {
+    // Enforce max size - remove oldest entries if needed
+    if (this.cache.size >= this.maxSize) {
+      const oldestKey = this.cache.keys().next().value;
+      this.cache.delete(oldestKey);
+    }
+    
     this.cache.set(key, {
       value,
       expires: Date.now() + ttl
@@ -148,10 +162,20 @@ export class ComputeCache {
   clear(): void {
     this.cache.clear();
   }
+  
+  // Remove expired entries to free up memory
+  cleanup(): void {
+    const now = Date.now();
+    this.cache.forEach((item, key) => {
+      if (now > item.expires) {
+        this.cache.delete(key);
+      }
+    });
+  }
 }
 
 // Create a global computation cache instance
-export const computeCache = new ComputeCache();
+export const computeCache = new ComputeCache(200); // Allow up to 200 cached items
 
 // Global indicator for in-progress updates to prevent duplicate status changes
 const processingOrderIds = new Set<string>();
@@ -203,4 +227,6 @@ export const clearProcessingState = (orderId: string): void => {
 export const clearAllProcessingStates = (): void => {
   processingOrderIds.clear();
   lastProcessedTime.clear();
+  
+  console.log("All processing states have been cleared");
 };

@@ -23,6 +23,7 @@ import {
 import { useApp } from "@/contexts/AppContext";
 import { handleCancelOrder } from "@/contexts/orderHelpers";
 import { isOrderProcessing } from "@/contexts/orderOptimizer";
+import { preventRapidClicks } from "@/lib/performance";
 
 interface OrderCardProps {
   order: Order;
@@ -36,6 +37,7 @@ const OrderCard = memo(({ order, userRole, updateStatus }: OrderCardProps) => {
   const [isLocalProcessing, setIsLocalProcessing] = useState(false);
   const processingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
+  const buttonStatesRef = useRef<Record<string, boolean>>({});
 
   // Check if order is being processed globally or locally
   const isProcessing = isLocalProcessing || isOrderProcessing(order.id);
@@ -87,12 +89,18 @@ const OrderCard = memo(({ order, userRole, updateStatus }: OrderCardProps) => {
     }
   }, []);
 
-  // Reset processing state when order status changes
+  // Reset processing state when order status changes or component unmounts
   useEffect(() => {
     setIsLocalProcessing(false);
     if (processingTimeoutRef.current) {
       clearTimeout(processingTimeoutRef.current);
     }
+    
+    return () => {
+      if (processingTimeoutRef.current) {
+        clearTimeout(processingTimeoutRef.current);
+      }
+    };
   }, [order.status]);
 
   // Disable button immediately on click to prevent multiple clicks
@@ -103,6 +111,10 @@ const OrderCard = memo(({ order, userRole, updateStatus }: OrderCardProps) => {
   }, [isLocalProcessing]);
 
   const updateItemQuantity = useCallback((itemId: string, delta: number) => {
+    // Check for rapid clicks
+    const clickId = `quantity-${order.id}-${itemId}-${delta > 0 ? 'inc' : 'dec'}`;
+    if (!preventRapidClicks(clickId, 500)) return;
+    
     if (order.status !== 'pending') {
       toast.error("Can only modify pending orders");
       return;
@@ -136,6 +148,10 @@ const OrderCard = memo(({ order, userRole, updateStatus }: OrderCardProps) => {
   }, [order.id, order.status, setOrders]);
 
   const removeItem = useCallback((itemId: string) => {
+    // Check for rapid clicks
+    const clickId = `remove-${order.id}-${itemId}`;
+    if (!preventRapidClicks(clickId, 500)) return;
+    
     if (order.status !== 'pending') {
       toast.error("Can only modify pending orders");
       return;
@@ -162,38 +178,61 @@ const OrderCard = memo(({ order, userRole, updateStatus }: OrderCardProps) => {
   }, [order.id, order.status, setOrders]);
 
   const handleStatusUpdate = useCallback(() => {
-    // Prevent multiple clicks
+    // First, perform a synchronous check using local and global state
     if (isProcessing) {
-      return; // Simply return without showing error toast to prevent confusion
+      console.log("Ignoring click - already processing");
+      return;
     }
     
+    // Second, check for rapid clicks using unique IDs for this specific action
+    const clickId = `status-${order.id}-${order.status}`;
+    if (!preventRapidClicks(clickId, 2000)) {
+      console.log("Ignoring rapid click on status update");
+      return;
+    }
+    
+    // Check if button is already in "clicked" state via ref
+    if (buttonStatesRef.current[clickId]) {
+      console.log("Button already clicked, ignoring");
+      return;
+    }
+    
+    // Mark button as clicked in ref
+    buttonStatesRef.current[clickId] = true;
+    
     const nextStatus = getNextStatus();
-    if (!nextStatus || !updateStatus) return;
+    if (!nextStatus || !updateStatus) {
+      buttonStatesRef.current[clickId] = false; // Reset for future clicks
+      return;
+    }
     
     if (canUpdateStatus(userRole, order.status, nextStatus)) {
       // Set local processing state immediately
       setIsLocalProcessing(true);
       
-      // Visual feedback that button was clicked - with unique ID
+      // Only show one toast with a unique ID
       const toastId = `updating-${order.id}-${Date.now()}`;
       toast.loading(`Updating order to ${nextStatus}...`, {
         id: toastId,
         duration: 2000
       });
       
-      // Call the update function with a small delay
+      // Apply the update with a minimal delay
       setTimeout(() => {
-        updateStatus(order.id, nextStatus);
+        if (updateStatus) {
+          updateStatus(order.id, nextStatus);
+        }
       }, 10);
       
-      // Reset local processing state after a longer delay
+      // Reset local processing state after a delay
       if (processingTimeoutRef.current) {
         clearTimeout(processingTimeoutRef.current);
       }
       
       processingTimeoutRef.current = setTimeout(() => {
         setIsLocalProcessing(false);
-      }, 10000); // 10 second cooldown to prevent rapid clicking
+        buttonStatesRef.current[clickId] = false; // Reset button state
+      }, 5000); // 5 second cooldown
     }
   }, [isProcessing, getNextStatus, canUpdateStatus, userRole, order.status, order.id, updateStatus]);
 
@@ -230,12 +269,17 @@ const OrderCard = memo(({ order, userRole, updateStatus }: OrderCardProps) => {
   }).format(order.totalAmount);
 
   const handleCancel = useCallback(() => {
+    // Check for rapid clicks
+    const clickId = `cancel-${order.id}`;
+    if (!preventRapidClicks(clickId, 1000)) return;
+    
     if (window.confirm('Are you sure you want to cancel this order?')) {
       handleCancelOrder(order.id, setOrders);
     }
   }, [order.id, setOrders]);
 
   const toggleDetails = useCallback(() => {
+    // No need for throttling on UI toggle operations
     setShowDetails(prev => !prev);
   }, []);
 
@@ -363,6 +407,7 @@ const OrderCard = memo(({ order, userRole, updateStatus }: OrderCardProps) => {
               variant="outline" 
               className="ml-auto border-pink-200 text-pink-700"
               onClick={() => {
+                // Don't need throttling for view bill - it's a simple operation
                 window.print();
               }}
             >
