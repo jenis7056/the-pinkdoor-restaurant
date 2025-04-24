@@ -15,6 +15,7 @@ export interface Customer {
   name: string;
   tableNumber?: number;
   createdAt: string;
+  tabId?: string; // Tab identifier to track which browser tab the customer is in
 }
 
 // Menu Items

@@ -2,6 +2,7 @@
 import { useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { UserRole } from "@/types";
+import { getTabId } from "@/contexts/localStorageHelpers";
 
 interface UserActionsProps {
   currentUser: any;
@@ -35,9 +36,11 @@ const UserActions = ({ currentUser, currentCustomer, logout }: UserActionsProps)
     (isChefRoute && currentUser.role === "chef")
   );
   
-  const shouldShowCustomer = currentCustomer && (
-    isCustomerRoute || (!isAdminRoute && !isWaiterRoute && !isChefRoute)
-  );
+  // Only show customer data if it's for this tab
+  const currentTabId = getTabId();
+  const shouldShowCustomer = currentCustomer && 
+    (!currentCustomer.tabId || currentCustomer.tabId === currentTabId) &&
+    (isCustomerRoute || (!isAdminRoute && !isWaiterRoute && !isChefRoute));
   
   if (shouldShowStaffUser || shouldShowCustomer) {
     return (

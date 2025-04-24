@@ -1,3 +1,4 @@
+
 import { useNavigate } from "react-router-dom";
 import Layout from "@/components/Layout";
 import { Button } from "@/components/ui/button";
@@ -6,10 +7,12 @@ import { Separator } from "@/components/ui/separator";
 import { useApp } from "@/contexts/AppContext";
 import { UserRole } from "@/types";
 import { ArrowRight, UtensilsCrossed, ChefHat, Clipboard, UserCircle } from "lucide-react";
+import { getTabId } from "@/contexts/localStorageHelpers";
 
 const Index = () => {
   const navigate = useNavigate();
   const { currentUser, currentCustomer } = useApp();
+  const currentTabId = getTabId();
 
   // Function to handle direct navigation to role pages
   const goToRolePage = (role: UserRole) => {
@@ -21,6 +24,10 @@ const Index = () => {
     };
     navigate(rolePages[role]);
   };
+
+  // Only show customer button if it's for this tab
+  const isCurrentTabCustomer = currentCustomer && 
+    (!currentCustomer.tabId || currentCustomer.tabId === currentTabId);
 
   const renderRoleCards = () => {
     // If user is already logged in, show their dashboard button
@@ -161,7 +168,7 @@ const Index = () => {
               Choose your role above to access the appropriate portal.
             </p>
             
-            {currentCustomer && (
+            {isCurrentTabCustomer && (
               <Button 
                 className="bg-pink-700 hover:bg-pink-800"
                 onClick={() => navigate("/customer")}

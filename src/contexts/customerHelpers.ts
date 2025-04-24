@@ -1,7 +1,7 @@
 
 import { Customer, Order } from "@/types";
 import { toast } from "sonner";
-import { clearTabCustomerData } from "./localStorageHelpers";
+import { clearTabCustomerData, getTabId } from "./localStorageHelpers";
 
 export const handleRegisterCustomer = (
   name: string,
@@ -38,7 +38,8 @@ export const handleRegisterCustomer = (
     id: crypto.randomUUID(),
     name,
     tableNumber,
-    createdAt: new Date().toISOString()
+    createdAt: new Date().toISOString(),
+    tabId: getTabId() // Store the tab ID with the customer
   };
   
   setCustomers(prev => [...prev, newCustomer]);

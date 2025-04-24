@@ -15,12 +15,13 @@ export const loadStateFromLocalStorage = (
   setCart: React.Dispatch<React.SetStateAction<any>>
 ) => {
   try {
+    // Load user data - this is shared across tabs for staff members
     const currentUser = localStorage.getItem('currentUser');
     if (currentUser) {
       setCurrentUser(JSON.parse(currentUser));
     }
 
-    // Instead of directly using localStorage for customer, check for tab-specific storage first
+    // For customers, ONLY use tab-specific storage
     const tabCustomer = sessionStorage.getItem(`currentCustomer_${TAB_ID}`);
     
     if (tabCustomer) {
@@ -29,17 +30,12 @@ export const loadStateFromLocalStorage = (
       setCurrentCustomer(parsedCustomer);
       tabCustomerCache.set('currentCustomer', parsedCustomer);
     } else {
-      // If no tab-specific data, try to get from localStorage as fallback
-      const currentCustomer = localStorage.getItem('currentCustomer');
-      if (currentCustomer) {
-        const parsedCustomer = JSON.parse(currentCustomer);
-        setCurrentCustomer(parsedCustomer);
-        // Save to session storage for tab isolation
-        sessionStorage.setItem(`currentCustomer_${TAB_ID}`, currentCustomer);
-        tabCustomerCache.set('currentCustomer', parsedCustomer);
-      }
+      // No fallback to localStorage for customers
+      // This ensures each tab maintains its own customer session
+      setCurrentCustomer(null);
     }
 
+    // For admin/staff, load all customers
     const customers = localStorage.getItem('customers');
     if (customers) {
       setCustomers(JSON.parse(customers));
@@ -65,17 +61,13 @@ export const loadStateFromLocalStorage = (
       setOrders([]); // Ensure we have an empty array, not undefined
     }
 
-    const cart = localStorage.getItem(`cart_${TAB_ID}`);
+    // Always use tab-specific cart
+    const cart = sessionStorage.getItem(`cart_${TAB_ID}`);
     if (cart) {
       setCart(JSON.parse(cart));
     } else {
-      // Try global cart as fallback
-      const globalCart = localStorage.getItem('cart');
-      if (globalCart) {
-        setCart(JSON.parse(globalCart));
-        // Save to session storage for tab isolation
-        sessionStorage.setItem(`cart_${TAB_ID}`, globalCart);
-      }
+      // No fallback to global cart - each tab has its own cart
+      setCart([]);
     }
   } catch (error) {
     console.error('Error loading state from localStorage:', error);
@@ -84,32 +76,34 @@ export const loadStateFromLocalStorage = (
 
 export const saveToLocalStorage = (key: string, value: any) => {
   try {
-    // Only save if value is different from current storage
-    const currentValue = localStorage.getItem(key);
-    const newValue = JSON.stringify(value);
-    
-    // For customer-specific data, use tab isolation
+    // For customer-specific data, use strict tab isolation
     if (key === 'currentCustomer') {
-      // Save customer data in tab-specific storage
-      sessionStorage.setItem(`currentCustomer_${TAB_ID}`, newValue);
-      tabCustomerCache.set('currentCustomer', value);
-      
-      // Also update the global localStorage for other features that need it
-      if (currentValue !== newValue) {
-        localStorage.setItem(key, newValue);
-        console.log(`Saved to localStorage: ${key}`);
+      if (value) {
+        // Save customer data ONLY in tab-specific storage
+        const newValue = JSON.stringify(value);
+        sessionStorage.setItem(`currentCustomer_${TAB_ID}`, newValue);
+        tabCustomerCache.set('currentCustomer', value);
+        
+        // Don't update the global localStorage for currentCustomer
+        // This prevents customer data bleeding between tabs
+      } else {
+        // If value is null, clear the customer data
+        sessionStorage.removeItem(`currentCustomer_${TAB_ID}`);
+        tabCustomerCache.delete('currentCustomer');
       }
     } else if (key === 'cart') {
-      // Save cart data to tab-specific storage
-      sessionStorage.setItem(`cart_${TAB_ID}`, newValue);
-      
-      // Also update global localStorage for persistence
-      if (currentValue !== newValue) {
-        localStorage.setItem(key, newValue);
-        console.log(`Saved to localStorage: ${key}`);
+      // Save cart data to tab-specific storage only
+      if (value) {
+        const newValue = JSON.stringify(value);
+        sessionStorage.setItem(`cart_${TAB_ID}`, newValue);
+      } else {
+        sessionStorage.removeItem(`cart_${TAB_ID}`);
       }
     } else {
-      // For other data types, use standard localStorage
+      // For other data types (like customers array, orders, etc.), use standard localStorage
+      // This ensures staff members see all data across tabs
+      const currentValue = localStorage.getItem(key);
+      const newValue = JSON.stringify(value);
       if (currentValue !== newValue) {
         localStorage.setItem(key, newValue);
         console.log(`Saved to localStorage: ${key}`);
