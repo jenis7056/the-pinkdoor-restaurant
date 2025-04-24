@@ -1,6 +1,7 @@
 
 import { Customer, Order } from "@/types";
 import { toast } from "sonner";
+import { clearTabCustomerData } from "./localStorageHelpers";
 
 export const handleRegisterCustomer = (
   name: string,
@@ -10,6 +11,9 @@ export const handleRegisterCustomer = (
   customers: Customer[],
   orders: Order[]
 ) => {
+  // Clear any existing customer data in this tab first
+  clearTabCustomerData();
+  
   // Validate table number is within allowed range
   if (tableNumber < 1 || tableNumber > 15) {
     throw new Error("Table number must be between 1 and 15");
@@ -58,6 +62,8 @@ export const handleRemoveCustomer = (
     // If removing the current customer, also clear their session
     if (currentCustomer?.id === id) {
       setCurrentCustomer(null);
+      // Clear tab-specific data
+      clearTabCustomerData();
     }
     
     toast.success(`Customer ${customer.name} has been removed`);

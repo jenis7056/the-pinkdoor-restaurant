@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from "react";
 import { User, Customer, MenuItem, Order, OrderItem, Category, UserRole, OrderStatus } from "@/types";
 import { menuData } from "@/data/menuItems";
@@ -10,7 +11,14 @@ import { handleAddMenuItem, handleUpdateMenuItem, handleDeleteMenuItem } from ".
 import { handleRegisterCustomer, handleRemoveCustomer } from "./customerHelpers";
 import { handleCreateOrder, handleUpdateOrderStatus, recoverLostOrders } from "./orderHelpers";
 import { handleAddToCart, handleUpdateCartItem, handleRemoveFromCart, handleClearCart } from "./cartHelpers";
-import { loadStateFromLocalStorage, saveToLocalStorage, forceSyncToLocalStorage } from "./localStorageHelpers";
+import { 
+  loadStateFromLocalStorage, 
+  saveToLocalStorage, 
+  forceSyncToLocalStorage,
+  isEventFromCurrentTab,
+  getTabId,
+  clearTabCustomerData
+} from "./localStorageHelpers";
 import { clearAllProcessingStates, persistentOrderStore } from "./orderOptimizer";
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -36,8 +44,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   // Flag to prevent initialization race conditions
   const [isInitialized, setIsInitialized] = useState(false);
   
-  // Store initialization timestamp to detect fresh sessions
+  // Store initialization timestamp and tab ID to detect fresh sessions
   const initTimeRef = useRef<number>(Date.now());
+  const tabIdRef = useRef<string>(getTabId());
 
   // Clear all processing flags on app initialization to prevent stuck state
   useEffect(() => {
@@ -64,6 +73,12 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     // Add storage event listener for cross-tab communication
     const handleStorageChange = (event: StorageEvent) => {
       if (!event.key) return;
+
+      // Skip processing events from this tab
+      if (isEventFromCurrentTab(event)) {
+        console.log("Ignoring storage event from current tab:", event.key);
+        return;
+      }
 
       console.log("Storage change detected:", event.key);
       
@@ -131,23 +146,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
             }
           }
           break;
-        case 'currentCustomer':
-          if (event.newValue) {
-            try {
-              const parsed = JSON.parse(event.newValue);
-              if (parsed._timestamp) {
-                setCurrentCustomer(parsed.data);
-              } else {
-                setCurrentCustomer(parsed);
-              }
-            } catch (error) {
-              console.error("Error parsing currentCustomer from storage event:", error);
-              setCurrentCustomer(null);
-            }
-          } else {
-            setCurrentCustomer(null);
-          }
-          break;
+          
+        // We no longer update currentCustomer from storage events as it's now tab-isolated
       }
     };
 
@@ -205,6 +205,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   }, []);
 
   const logout = useCallback(() => {
+    // Clear tab-specific customer data first
+    clearTabCustomerData();
+    // Then proceed with normal logout
     handleLogout(setCurrentUser);
   }, []);
 
@@ -228,6 +231,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const removeCustomer = useCallback((id: string) => {
     handleRemoveCustomer(id, customers, currentCustomer, setCustomers, setCurrentCustomer);
+    // Also clear tab-specific data if removing current customer
+    if (currentCustomer?.id === id) {
+      clearTabCustomerData();
+    }
   }, [customers, currentCustomer]);
 
   // Order management functions
