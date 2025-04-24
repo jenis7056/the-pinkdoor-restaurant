@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useMemo, useCallback, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import Layout from "@/components/Layout";
@@ -7,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import { ArrowLeft, Search, ShoppingBag, Receipt } from "lucide-react";
-import { OrderStatus } from "@/types";
+import { OrderStatus, Order } from "@/types";
 import { optimizeFilter, computeCache, markOrderProcessing, isOrderProcessing } from "@/contexts/orderOptimizer";
 import { preventRapidClicks, createPriorityClickHandler } from "@/lib/performance";
 import { printReceipt } from "@/utils/receiptGenerator";
