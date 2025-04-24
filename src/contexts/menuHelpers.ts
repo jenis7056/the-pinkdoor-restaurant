@@ -1,4 +1,3 @@
-
 import { MenuItem } from "@/types";
 import { toast } from "sonner";
 
@@ -24,7 +23,7 @@ export const handleUpdateMenuItem = (
       menuItem.id === id ? { ...menuItem, ...item } : menuItem
     )
   );
-  toast.success(`Menu item updated successfully`);
+  toast.success(`Menu item updated successfully${item.image ? ' with new image' : ''}`);
 };
 
 export const handleDeleteMenuItem = (
