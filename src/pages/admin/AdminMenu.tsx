@@ -216,7 +216,7 @@ const AdminMenu = () => {
           ))}
         </Tabs>
 
-        {/* Simplified Add Dialog without animations */}
+        {/* Add Dialog */}
         <Dialog 
           open={isAddDialogOpen} 
           onOpenChange={setIsAddDialogOpen}
@@ -278,16 +278,16 @@ const AdminMenu = () => {
                   <Label htmlFor="subcategory">Subcategory (Optional)</Label>
                   <Select
                     name="subcategory"
-                    value={formData.subcategory}
+                    value={formData.subcategory || "none"}
                     onValueChange={(value) => 
-                      setFormData((prev) => ({ ...prev, subcategory: value }))
+                      setFormData((prev) => ({ ...prev, subcategory: value === "none" ? "" : value }))
                     }
                   >
                     <SelectTrigger className="border-pink-200">
                       <SelectValue placeholder="Select a subcategory" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">None</SelectItem>
+                      <SelectItem value="none">None</SelectItem>
                       {categories
                         .find((cat) => cat.name === formData.category)
                         ?.subcategories.map((sub) => (
@@ -350,7 +350,7 @@ const AdminMenu = () => {
           </DialogContent>
         </Dialog>
 
-        {/* Simplified Edit Dialog without animations */}
+        {/* Edit Dialog */}
         <Dialog 
           open={isEditDialogOpen} 
           onOpenChange={setIsEditDialogOpen}
@@ -412,16 +412,16 @@ const AdminMenu = () => {
                   <Label htmlFor="edit-subcategory">Subcategory (Optional)</Label>
                   <Select
                     name="subcategory"
-                    value={formData.subcategory}
+                    value={formData.subcategory || "none"}
                     onValueChange={(value) => 
-                      setFormData((prev) => ({ ...prev, subcategory: value }))
+                      setFormData((prev) => ({ ...prev, subcategory: value === "none" ? "" : value }))
                     }
                   >
                     <SelectTrigger className="border-pink-200">
                       <SelectValue placeholder="Select a subcategory" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">None</SelectItem>
+                      <SelectItem value="none">None</SelectItem>
                       {categories
                         .find((cat) => cat.name === formData.category)
                         ?.subcategories.map((sub) => (
