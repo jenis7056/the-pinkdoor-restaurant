@@ -1,4 +1,3 @@
-
 import { useState, useCallback, memo, useRef, useEffect } from "react";
 import { Order, OrderItem, OrderStatus, UserRole } from "@/types";
 import { Button } from "@/components/ui/button";
@@ -29,9 +28,10 @@ interface OrderCardProps {
   order: Order;
   userRole: UserRole;
   updateStatus?: (orderId: string, status: OrderStatus) => void;
+  onGenerateBill?: (order: Order) => Promise<void>;
 }
 
-const OrderCard = memo(({ order, userRole, updateStatus }: OrderCardProps) => {
+const OrderCard = memo(({ order, userRole, updateStatus, onGenerateBill }: OrderCardProps) => {
   const { orders, setOrders } = useApp();
   const [showDetails, setShowDetails] = useState(false);
   const [isLocalProcessing, setIsLocalProcessing] = useState(false);
@@ -39,7 +39,6 @@ const OrderCard = memo(({ order, userRole, updateStatus }: OrderCardProps) => {
   const buttonRef = useRef<HTMLButtonElement>(null);
   const buttonStatesRef = useRef<Record<string, boolean>>({});
 
-  // Check if order is being processed globally or locally
   const isProcessing = isLocalProcessing || isOrderProcessing(order.id);
 
   const statusIcons = {
@@ -89,7 +88,6 @@ const OrderCard = memo(({ order, userRole, updateStatus }: OrderCardProps) => {
     }
   }, []);
 
-  // Reset processing state when order status changes or component unmounts
   useEffect(() => {
     setIsLocalProcessing(false);
     if (processingTimeoutRef.current) {
@@ -103,7 +101,6 @@ const OrderCard = memo(({ order, userRole, updateStatus }: OrderCardProps) => {
     };
   }, [order.status]);
 
-  // Disable button immediately on click to prevent multiple clicks
   useEffect(() => {
     if (isLocalProcessing && buttonRef.current) {
       buttonRef.current.disabled = true;
@@ -111,7 +108,6 @@ const OrderCard = memo(({ order, userRole, updateStatus }: OrderCardProps) => {
   }, [isLocalProcessing]);
 
   const updateItemQuantity = useCallback((itemId: string, delta: number) => {
-    // Check for rapid clicks
     const clickId = `quantity-${order.id}-${itemId}-${delta > 0 ? 'inc' : 'dec'}`;
     if (!preventRapidClicks(clickId, 500)) return;
     
@@ -148,7 +144,6 @@ const OrderCard = memo(({ order, userRole, updateStatus }: OrderCardProps) => {
   }, [order.id, order.status, setOrders]);
 
   const removeItem = useCallback((itemId: string) => {
-    // Check for rapid clicks
     const clickId = `remove-${order.id}-${itemId}`;
     if (!preventRapidClicks(clickId, 500)) return;
     
@@ -178,61 +173,53 @@ const OrderCard = memo(({ order, userRole, updateStatus }: OrderCardProps) => {
   }, [order.id, order.status, setOrders]);
 
   const handleStatusUpdate = useCallback(() => {
-    // First, perform a synchronous check using local and global state
     if (isProcessing) {
       console.log("Ignoring click - already processing");
       return;
     }
     
-    // Second, check for rapid clicks using unique IDs for this specific action
     const clickId = `status-${order.id}-${order.status}`;
     if (!preventRapidClicks(clickId, 2000)) {
       console.log("Ignoring rapid click on status update");
       return;
     }
     
-    // Check if button is already in "clicked" state via ref
     if (buttonStatesRef.current[clickId]) {
       console.log("Button already clicked, ignoring");
       return;
     }
     
-    // Mark button as clicked in ref
     buttonStatesRef.current[clickId] = true;
     
     const nextStatus = getNextStatus();
     if (!nextStatus || !updateStatus) {
-      buttonStatesRef.current[clickId] = false; // Reset for future clicks
+      buttonStatesRef.current[clickId] = false;
       return;
     }
     
     if (canUpdateStatus(userRole, order.status, nextStatus)) {
-      // Set local processing state immediately
       setIsLocalProcessing(true);
       
-      // Only show one toast with a unique ID
       const toastId = `updating-${order.id}-${Date.now()}`;
       toast.loading(`Updating order to ${nextStatus}...`, {
         id: toastId,
         duration: 2000
       });
       
-      // Apply the update with a minimal delay
       setTimeout(() => {
         if (updateStatus) {
           updateStatus(order.id, nextStatus);
         }
       }, 10);
       
-      // Reset local processing state after a delay
       if (processingTimeoutRef.current) {
         clearTimeout(processingTimeoutRef.current);
       }
       
       processingTimeoutRef.current = setTimeout(() => {
         setIsLocalProcessing(false);
-        buttonStatesRef.current[clickId] = false; // Reset button state
-      }, 5000); // 5 second cooldown
+        buttonStatesRef.current[clickId] = false;
+      }, 5000);
     }
   }, [isProcessing, getNextStatus, canUpdateStatus, userRole, order.status, order.id, updateStatus]);
 
@@ -269,7 +256,6 @@ const OrderCard = memo(({ order, userRole, updateStatus }: OrderCardProps) => {
   }).format(order.totalAmount);
 
   const handleCancel = useCallback(() => {
-    // Check for rapid clicks
     const clickId = `cancel-${order.id}`;
     if (!preventRapidClicks(clickId, 1000)) return;
     
@@ -279,11 +265,9 @@ const OrderCard = memo(({ order, userRole, updateStatus }: OrderCardProps) => {
   }, [order.id, setOrders]);
 
   const toggleDetails = useCallback(() => {
-    // No need for throttling on UI toggle operations
     setShowDetails(prev => !prev);
   }, []);
 
-  // Clean up timeout on unmount
   useEffect(() => {
     return () => {
       if (processingTimeoutRef.current) {
@@ -402,12 +386,22 @@ const OrderCard = memo(({ order, userRole, updateStatus }: OrderCardProps) => {
             </Button>
           )}
           
+          {userRole === "admin" && onGenerateBill && (
+            <Button 
+              variant="outline" 
+              className="ml-auto border-pink-200 text-pink-700"
+              onClick={() => onGenerateBill(order)}
+            >
+              <Receipt className="h-4 w-4 mr-2" />
+              Generate Bill
+            </Button>
+          )}
+          
           {order.status === "completed" && (
             <Button 
               variant="outline" 
               className="ml-auto border-pink-200 text-pink-700"
               onClick={() => {
-                // Don't need throttling for view bill - it's a simple operation
                 window.print();
               }}
             >

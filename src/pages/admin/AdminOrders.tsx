@@ -6,10 +6,12 @@ import { useApp } from "@/contexts/AppContext";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
-import { ArrowLeft, Search, ShoppingBag } from "lucide-react";
+import { ArrowLeft, Search, ShoppingBag, Receipt } from "lucide-react";
 import { OrderStatus } from "@/types";
 import { optimizeFilter, computeCache, markOrderProcessing, isOrderProcessing } from "@/contexts/orderOptimizer";
 import { preventRapidClicks, createPriorityClickHandler } from "@/lib/performance";
+import { printReceipt } from "@/utils/receiptGenerator";
+import { toast } from "sonner";
 
 const AdminOrders = () => {
   const [activeTab, setActiveTab] = useState<OrderStatus | "all" | "active">("active");
@@ -173,6 +175,15 @@ const AdminOrders = () => {
     setSearchQuery(e.target.value);
   }, []);
 
+  const handleGenerateBill = async (order: Order) => {
+    const printed = await printReceipt(order);
+    if (printed) {
+      toast.success('Bill printed successfully');
+    } else {
+      toast.error('Failed to print bill. Please check printer connection.');
+    }
+  };
+
   return (
     <Layout>
       <div className="container mx-auto px-4 py-8">
@@ -265,6 +276,7 @@ const AdminOrders = () => {
                     order={order}
                     userRole="admin"
                     updateStatus={handleUpdateStatus}
+                    onGenerateBill={handleGenerateBill}
                   />
                 ))}
               </div>
