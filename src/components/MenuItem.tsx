@@ -50,8 +50,12 @@ const MenuItem = memo(({ menuItem, isAdmin = false, onEdit, onDelete }: MenuItem
           src={menuItem.image} 
           alt={menuItem.name} 
           className="object-cover w-full h-full"
-          loading="lazy"  // Add lazy loading for better performance
-          decoding="async" // Add async decoding for better performance
+          loading="lazy"  
+          decoding="async" 
+          onError={(e) => {
+            // Fallback image if the primary one fails to load
+            (e.target as HTMLImageElement).src = "https://images.unsplash.com/photo-1518770660439-4636190af475";
+          }}
         />
       </AspectRatio>
 
@@ -89,6 +93,20 @@ const MenuItem = memo(({ menuItem, isAdmin = false, onEdit, onDelete }: MenuItem
             </DialogHeader>
             
             <div className="py-4">
+              <div className="mb-4">
+                <AspectRatio ratio={16 / 9} className="overflow-hidden rounded-md">
+                  <img 
+                    src={menuItem.image} 
+                    alt={menuItem.name} 
+                    className="object-cover w-full h-full"
+                    onError={(e) => {
+                      // Fallback image if the primary one fails to load
+                      (e.target as HTMLImageElement).src = "https://images.unsplash.com/photo-1518770660439-4636190af475";
+                    }}
+                  />
+                </AspectRatio>
+              </div>
+              
               <p className="text-gray-700 mb-4">{menuItem.description}</p>
               
               {menuItem.subcategory && (
