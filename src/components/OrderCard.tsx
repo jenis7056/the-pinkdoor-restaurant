@@ -106,6 +106,11 @@ const OrderCard = memo(({ order, userRole, updateStatus, onGenerateBill }: Order
     }).format(amount);
   };
 
+  const getTotalWithTaxes = () => {
+    const taxes = calculateTaxes(order.totalAmount);
+    return order.totalAmount + taxes.sgst + taxes.cgst;
+  };
+
   useEffect(() => {
     setIsLocalProcessing(false);
     if (processingTimeoutRef.current) {
@@ -267,11 +272,8 @@ const OrderCard = memo(({ order, userRole, updateStatus, onGenerateBill }: Order
     return null;
   }, [userRole, order.id, order.status, getNextStatus, canUpdateStatus, updateStatus, handleStatusUpdate, isProcessing]);
 
-  const totalAmount = new Intl.NumberFormat("en-IN", {
-    style: "currency",
-    currency: "INR",
-    minimumFractionDigits: 0,
-  }).format(order.totalAmount);
+  const subtotalFormatted = formatCurrency(order.totalAmount);
+  const totalWithTaxes = formatCurrency(getTotalWithTaxes());
 
   const handleCancel = useCallback(() => {
     const clickId = `cancel-${order.id}`;
@@ -314,7 +316,10 @@ const OrderCard = memo(({ order, userRole, updateStatus, onGenerateBill }: Order
       <CardContent>
         <div className="flex justify-between text-sm text-gray-500 mb-2">
           <span>Ordered: {formatDate(order.createdAt)}</span>
-          <span className="font-medium text-pink-800">{totalAmount}</span>
+          <div className="flex flex-col items-end">
+            <span className="text-gray-500 text-xs">Subtotal: {subtotalFormatted}</span>
+            <span className="font-medium text-pink-800">Total (with tax): {totalWithTaxes}</span>
+          </div>
         </div>
 
         <div>
@@ -367,11 +372,7 @@ const OrderCard = memo(({ order, userRole, updateStatus, onGenerateBill }: Order
                     </div>
                   )}
                   <p className="font-medium ml-4">
-                    {new Intl.NumberFormat("en-IN", {
-                      style: "currency",
-                      currency: "INR",
-                      minimumFractionDigits: 0,
-                    }).format(item.menuItem.price * item.quantity)}
+                    {formatCurrency(item.menuItem.price * item.quantity)}
                   </p>
                 </div>
               </div>
@@ -396,11 +397,7 @@ const OrderCard = memo(({ order, userRole, updateStatus, onGenerateBill }: Order
               <div className="flex justify-between font-medium text-lg">
                 <span>Total with Tax</span>
                 <span className="text-pink-900">
-                  {formatCurrency(
-                    order.totalAmount + 
-                    calculateTaxes(order.totalAmount).cgst + 
-                    calculateTaxes(order.totalAmount).sgst
-                  )}
+                  {formatCurrency(getTotalWithTaxes())}
                 </span>
               </div>
             </div>
