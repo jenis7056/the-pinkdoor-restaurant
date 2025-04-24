@@ -6,12 +6,12 @@ import { useApp } from "@/contexts/AppContext";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
-import { ArrowLeft, Search, ShoppingBag, Receipt } from "lucide-react";
+import { ArrowLeft, Search, ShoppingBag, Receipt, Printer } from "lucide-react";
 import { OrderStatus, Order } from "@/types";
 import { optimizeFilter, computeCache, markOrderProcessing, isOrderProcessing } from "@/contexts/orderOptimizer";
 import { preventRapidClicks, createPriorityClickHandler } from "@/lib/performance";
-import { generateDigitalBill } from "@/utils/receiptGenerator";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { generateDigitalBill, printReceipt } from "@/utils/receiptGenerator";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { toast } from "sonner";
 
 const AdminOrders = () => {
@@ -184,6 +184,15 @@ const AdminOrders = () => {
     return Promise.resolve();
   };
 
+  const handlePrintBill = async (order: Order) => {
+    const success = await printReceipt(order);
+    if (success) {
+      toast.success("Bill printed successfully");
+    } else {
+      toast.error("Failed to print bill");
+    }
+  };
+
   return (
     <Layout>
       <div className="container mx-auto px-4 py-8">
@@ -300,9 +309,21 @@ const AdminOrders = () => {
               <DialogTitle>Digital Bill</DialogTitle>
             </DialogHeader>
             {selectedOrder && (
-              <pre className="whitespace-pre-wrap font-mono text-sm p-4 bg-gray-50 rounded-lg">
-                {generateDigitalBill(selectedOrder)}
-              </pre>
+              <>
+                <pre className="whitespace-pre-wrap font-mono text-sm p-4 bg-gray-50 rounded-lg">
+                  {generateDigitalBill(selectedOrder)}
+                </pre>
+                <DialogFooter>
+                  <Button
+                    variant="outline"
+                    onClick={() => handlePrintBill(selectedOrder)}
+                    className="mt-4"
+                  >
+                    <Printer className="h-4 w-4 mr-2" />
+                    Print Bill
+                  </Button>
+                </DialogFooter>
+              </>
             )}
           </DialogContent>
         </Dialog>
