@@ -1,6 +1,15 @@
 
 import { Order, OrderItem } from "@/types";
 
+// Add the missing TypeScript interface for Web Serial API
+declare global {
+  interface Navigator {
+    serial: {
+      requestPort: () => Promise<any>;
+    }
+  }
+}
+
 const formatCurrency = (amount: number) => {
   return new Intl.NumberFormat("en-IN", {
     style: "currency",

@@ -233,15 +233,21 @@ export const handleUpdateOrderStatus = (
     
     // Attempt to print receipt
     setTimeout(async () => {
-      const order = orders.find(o => o.id === orderId);
-      if (order) {
-        const printed = await printReceipt(order);
-        if (printed) {
-          toast.success('Receipt printed successfully');
-        } else {
-          toast.error('Failed to print receipt. Please check printer connection.');
+      // Use setOrders to get the current state of orders to find the order
+      setOrders(currentOrders => {
+        const order = currentOrders.find(o => o.id === orderId);
+        if (order) {
+          // Print receipt using the found order
+          printReceipt(order).then(printed => {
+            if (printed) {
+              toast.success('Receipt printed successfully');
+            } else {
+              toast.error('Failed to print receipt. Please check printer connection.');
+            }
+          });
         }
-      }
+        return currentOrders; // Return unchanged orders
+      });
     }, 100);
     
     // Show success toast after state has been updated
