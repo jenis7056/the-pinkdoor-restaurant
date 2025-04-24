@@ -64,8 +64,16 @@ export const generateDigitalBill = (order: Order): string => {
   const formattedDate = date.toLocaleDateString();
   const formattedTime = date.toLocaleTimeString();
 
+  const CGST_RATE = 0.025; // 2.5%
+  const SGST_RATE = 0.025; // 2.5%
+
+  const subtotal = order.totalAmount;
+  const cgstAmount = subtotal * CGST_RATE;
+  const sgstAmount = subtotal * SGST_RATE;
+  const totalWithTax = subtotal + cgstAmount + sgstAmount;
+
   let content = [
-    "RESTAURANT NAME\n",
+    "THE PINKDOOR RESTAURANT\n",
     "Thank you for dining with us!\n\n",
     `Order #: ${order.id.substring(0, 8)}\n`,
     `Date: ${formattedDate}\n`,
@@ -87,7 +95,11 @@ export const generateDigitalBill = (order: Order): string => {
 
   content += [
     "--------------------------------\n",
-    `TOTAL:${" ".repeat(25)}${formatCurrency(order.totalAmount)}\n\n`,
+    `Subtotal:${" ".repeat(23)}${formatCurrency(subtotal)}\n`,
+    `CGST (2.5%):${" ".repeat(20)}${formatCurrency(cgstAmount)}\n`,
+    `SGST (2.5%):${" ".repeat(20)}${formatCurrency(sgstAmount)}\n`,
+    "--------------------------------\n",
+    `TOTAL:${" ".repeat(25)}${formatCurrency(totalWithTax)}\n\n`,
     "Thank you! Please visit again!\n\n"
   ].join("");
 
