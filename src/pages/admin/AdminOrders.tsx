@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useMemo, useCallback, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import Layout from "@/components/Layout";
@@ -11,12 +10,14 @@ import { ArrowLeft, Search, ShoppingBag, Receipt } from "lucide-react";
 import { OrderStatus, Order } from "@/types";
 import { optimizeFilter, computeCache, markOrderProcessing, isOrderProcessing } from "@/contexts/orderOptimizer";
 import { preventRapidClicks, createPriorityClickHandler } from "@/lib/performance";
-import { printReceipt } from "@/utils/receiptGenerator";
+import { generateDigitalBill } from "@/utils/receiptGenerator";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { toast } from "sonner";
 
 const AdminOrders = () => {
   const [activeTab, setActiveTab] = useState<OrderStatus | "all" | "active">("active");
   const [searchQuery, setSearchQuery] = useState("");
+  const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const navigate = useNavigate();
   const { orders, updateOrderStatus, currentUser } = useApp();
   const prevOrdersRef = useRef(orders);
@@ -176,13 +177,10 @@ const AdminOrders = () => {
     setSearchQuery(e.target.value);
   }, []);
 
-  const handleGenerateBill = async (order: Order) => {
-    const printed = await printReceipt(order);
-    if (printed) {
-      toast.success('Bill printed successfully');
-    } else {
-      toast.error('Failed to print bill. Please check printer connection.');
-    }
+  const handleGenerateBill = (order: Order) => {
+    setSelectedOrder(order);
+    const billContent = generateDigitalBill(order);
+    toast.success('Bill generated successfully');
   };
 
   return (
@@ -294,6 +292,19 @@ const AdminOrders = () => {
             )}
           </TabsContent>
         </Tabs>
+
+        <Dialog open={Boolean(selectedOrder)} onOpenChange={() => setSelectedOrder(null)}>
+          <DialogContent className="max-w-md">
+            <DialogHeader>
+              <DialogTitle>Digital Bill</DialogTitle>
+            </DialogHeader>
+            {selectedOrder && (
+              <pre className="whitespace-pre-wrap font-mono text-sm p-4 bg-gray-50 rounded-lg">
+                {generateDigitalBill(selectedOrder)}
+              </pre>
+            )}
+          </DialogContent>
+        </Dialog>
       </div>
     </Layout>
   );

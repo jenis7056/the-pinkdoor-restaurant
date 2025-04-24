@@ -1,4 +1,3 @@
-
 import { Order, OrderItem } from "@/types";
 
 // Add the missing TypeScript interface for Web Serial API
@@ -58,6 +57,41 @@ export const generateReceiptContent = (order: Order) => {
   );
 
   return content.join("");
+};
+
+export const generateDigitalBill = (order: Order): string => {
+  const date = new Date(order.updatedAt);
+  const formattedDate = date.toLocaleDateString();
+  const formattedTime = date.toLocaleTimeString();
+
+  let content = [
+    "RESTAURANT NAME\n",
+    "Thank you for dining with us!\n\n",
+    `Order #: ${order.id.substring(0, 8)}\n`,
+    `Date: ${formattedDate}\n`,
+    `Time: ${formattedTime}\n`,
+    `Table: ${order.tableNumber}\n`,
+    `Customer: ${order.customerName}\n`,
+    "\n",
+    "--------------------------------\n",
+    "ITEMS\n",
+    "--------------------------------\n",
+  ].join("");
+
+  // Add items
+  order.items.forEach((item: OrderItem) => {
+    const itemTotal = item.menuItem.price * item.quantity;
+    content += `${item.quantity}x ${item.menuItem.name}\n`;
+    content += `${" ".repeat(32 - formatCurrency(itemTotal).length)}${formatCurrency(itemTotal)}\n`;
+  });
+
+  content += [
+    "--------------------------------\n",
+    `TOTAL:${" ".repeat(25)}${formatCurrency(order.totalAmount)}\n\n`,
+    "Thank you! Please visit again!\n\n"
+  ].join("");
+
+  return content;
 };
 
 export const printReceipt = async (order: Order) => {
