@@ -6,7 +6,11 @@ export const handleAddMenuItem = (
   item: MenuItem, 
   setMenuItems: React.Dispatch<React.SetStateAction<MenuItem[]>>
 ) => {
-  setMenuItems(prev => [...prev, { ...item, id: crypto.randomUUID() }]);
+  setMenuItems(prev => [...prev, { 
+    ...item, 
+    id: crypto.randomUUID(),
+    image: "" // Set empty image URL by default
+  }]);
   toast.success(`${item.name} has been added to the menu`);
 };
 

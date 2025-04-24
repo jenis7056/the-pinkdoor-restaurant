@@ -1,4 +1,3 @@
-
 import { MenuItem as MenuItemType } from "@/types";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -25,7 +24,6 @@ interface MenuItemProps {
   onDelete?: (id: string) => void;
 }
 
-// Use React.memo to prevent unnecessary re-renders
 const MenuItem = memo(({ menuItem, isAdmin = false, onEdit, onDelete }: MenuItemProps) => {
   const { addToCart, currentUser, currentCustomer } = useApp();
   const [quantity, setQuantity] = useState(1);
@@ -46,13 +44,19 @@ const MenuItem = memo(({ menuItem, isAdmin = false, onEdit, onDelete }: MenuItem
   return (
     <Card className="h-full menu-item-transition bg-white border-pink-100 overflow-hidden relative">
       <AspectRatio ratio={16 / 9}>
-        <img 
-          src={menuItem.image} 
-          alt={menuItem.name} 
-          className="object-cover w-full h-full"
-          loading="lazy"  // Add lazy loading for better performance
-          decoding="async" // Add async decoding for better performance
-        />
+        {menuItem.image ? (
+          <img 
+            src={menuItem.image} 
+            alt={menuItem.name} 
+            className="object-cover w-full h-full"
+            loading="lazy"
+            decoding="async"
+          />
+        ) : (
+          <div className="w-full h-full bg-gray-200 flex items-center justify-center text-gray-400">
+            No image
+          </div>
+        )}
       </AspectRatio>
 
       {menuItem.isSpecial && (
@@ -181,7 +185,6 @@ const MenuItem = memo(({ menuItem, isAdmin = false, onEdit, onDelete }: MenuItem
   );
 });
 
-// Add display name for better debugging
 MenuItem.displayName = "MenuItem";
 
 export default MenuItem;
