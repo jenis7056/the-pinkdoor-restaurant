@@ -30,6 +30,7 @@ const MenuItem = memo(({ menuItem, isAdmin = false, onEdit, onDelete }: MenuItem
   const { addToCart, currentUser, currentCustomer } = useApp();
   const [quantity, setQuantity] = useState(1);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [imageError, setImageError] = useState(false);
 
   const handleAddToCart = () => {
     addToCart(menuItem, quantity);
@@ -43,19 +44,24 @@ const MenuItem = memo(({ menuItem, isAdmin = false, onEdit, onDelete }: MenuItem
     minimumFractionDigits: 0,
   }).format(menuItem.price);
 
+  // Use a fallback image if the main image fails to load
+  const fallbackImage = "https://images.unsplash.com/photo-1518770660439-4636190af475";
+  
+  // Reset image error state when menuItem changes
+  const handleImageError = () => {
+    setImageError(true);
+  };
+
   return (
     <Card className="h-full menu-item-transition bg-white border-pink-100 overflow-hidden relative">
       <AspectRatio ratio={16 / 9}>
         <img 
-          src={menuItem.image} 
+          src={imageError ? fallbackImage : menuItem.image || fallbackImage} 
           alt={menuItem.name} 
           className="object-cover w-full h-full"
           loading="lazy"  
           decoding="async" 
-          onError={(e) => {
-            // Fallback image if the primary one fails to load
-            (e.target as HTMLImageElement).src = "https://images.unsplash.com/photo-1518770660439-4636190af475";
-          }}
+          onError={handleImageError}
         />
       </AspectRatio>
 
@@ -96,13 +102,10 @@ const MenuItem = memo(({ menuItem, isAdmin = false, onEdit, onDelete }: MenuItem
               <div className="mb-4">
                 <AspectRatio ratio={16 / 9} className="overflow-hidden rounded-md">
                   <img 
-                    src={menuItem.image} 
+                    src={imageError ? fallbackImage : menuItem.image || fallbackImage} 
                     alt={menuItem.name} 
                     className="object-cover w-full h-full"
-                    onError={(e) => {
-                      // Fallback image if the primary one fails to load
-                      (e.target as HTMLImageElement).src = "https://images.unsplash.com/photo-1518770660439-4636190af475";
-                    }}
+                    onError={handleImageError}
                   />
                 </AspectRatio>
               </div>

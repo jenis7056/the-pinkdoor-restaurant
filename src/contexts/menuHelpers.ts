@@ -6,8 +6,10 @@ export const handleAddMenuItem = (
   item: MenuItem, 
   setMenuItems: React.Dispatch<React.SetStateAction<MenuItem[]>>
 ) => {
-  // Ensure the image URL is valid
-  const imageUrl = item.image || "https://images.unsplash.com/photo-1518770660439-4636190af475";
+  // Ensure the image URL is valid and not empty
+  const imageUrl = item.image && item.image.trim() !== "" 
+    ? item.image 
+    : "https://images.unsplash.com/photo-1518770660439-4636190af475";
   
   setMenuItems(prev => [...prev, { 
     ...item, 
@@ -22,12 +24,12 @@ export const handleUpdateMenuItem = (
   item: Partial<MenuItem>, 
   setMenuItems: React.Dispatch<React.SetStateAction<MenuItem[]>>
 ) => {
-  // Ensure the image URL exists
+  // Ensure the image URL exists and is not empty
   const updateData = {
     ...item
   };
   
-  if (!updateData.image) {
+  if (!updateData.image || updateData.image.trim() === "") {
     updateData.image = "https://images.unsplash.com/photo-1518770660439-4636190af475";
   }
   
