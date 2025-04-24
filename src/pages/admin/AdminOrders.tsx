@@ -177,10 +177,11 @@ const AdminOrders = () => {
     setSearchQuery(e.target.value);
   }, []);
 
-  const handleGenerateBill = (order: Order) => {
+  const handleGenerateBill = async (order: Order): Promise<void> => {
     setSelectedOrder(order);
     const billContent = generateDigitalBill(order);
     toast.success('Bill generated successfully');
+    return Promise.resolve();
   };
 
   return (
