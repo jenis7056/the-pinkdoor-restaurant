@@ -1,4 +1,3 @@
-
 import { Customer, OrderItem, Order, OrderStatus } from "@/types";
 import { toast } from "sonner";
 import { 
@@ -11,6 +10,7 @@ import {
   clearProcessingState,
   persistentOrderStore
 } from "./orderOptimizer";
+import { printReceipt } from "@/utils/receiptGenerator";
 
 // Track recent operations to prevent duplicates
 const recentOperations = new Map<string, number>();
@@ -125,7 +125,6 @@ export const handleCancelOrder = (
   });
 };
 
-// High performance order status update with improved reliability
 export const handleUpdateOrderStatus = (
   orderId: string, 
   status: OrderStatus,
@@ -228,13 +227,26 @@ export const handleUpdateOrderStatus = (
   };
   
   // Execute state update with optimized timing
-  if (status === 'completed') {
-    // For completed status, use immediate update for better responsiveness
+  if (status === 'served') {
+    // For served status, use immediate update for better responsiveness
     updateOrdersState();
+    
+    // Attempt to print receipt
+    setTimeout(async () => {
+      const order = orders.find(o => o.id === orderId);
+      if (order) {
+        const printed = await printReceipt(order);
+        if (printed) {
+          toast.success('Receipt printed successfully');
+        } else {
+          toast.error('Failed to print receipt. Please check printer connection.');
+        }
+      }
+    }, 100);
     
     // Show success toast after state has been updated
     setTimeout(() => {
-      toast.success('Order completed successfully', {
+      toast.success('Order served successfully', {
         id: toastId,
       });
     }, 100);
@@ -350,4 +362,3 @@ export const recoverLostOrders = (
     return [...prev, ...missingOrders];
   });
 };
-
