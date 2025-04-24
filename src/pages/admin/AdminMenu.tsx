@@ -37,7 +37,7 @@ const AdminMenu = () => {
     category: categories[0]?.name || "",
     subcategory: "",
     isSpecial: false,
-    image: "https://images.unsplash.com/photo-1518770660439-4636190af475"
+    image: ""
   });
   const [editingItemId, setEditingItemId] = useState<string | null>(null);
   
@@ -71,7 +71,7 @@ const AdminMenu = () => {
       category: categories[0]?.name || "",
       subcategory: "",
       isSpecial: false,
-      image: "https://images.unsplash.com/photo-1518770660439-4636190af475"
+      image: ""
     });
     setIsAddDialogOpen(true);
   };
@@ -120,7 +120,7 @@ const AdminMenu = () => {
       category: categories[0]?.name || "",
       subcategory: "",
       isSpecial: false,
-      image: "https://images.unsplash.com/photo-1518770660439-4636190af475"
+      image: ""
     });
     handleCloseAddDialog();
   };
@@ -143,7 +143,7 @@ const AdminMenu = () => {
       category: categories[0]?.name || "",
       subcategory: "",
       isSpecial: false,
-      image: "https://images.unsplash.com/photo-1518770660439-4636190af475"
+      image: ""
     });
     setEditingItemId(null);
     handleCloseEditDialog();
@@ -244,6 +244,19 @@ const AdminMenu = () => {
                   value={formData.description}
                   onChange={handleInputChange}
                   className="border-pink-200 min-h-[100px]"
+                />
+              </div>
+              
+              <div className="grid grid-cols-1 gap-2">
+                <Label htmlFor="image">Image URL</Label>
+                <Input
+                  id="image"
+                  name="image"
+                  type="url"
+                  placeholder="Enter image URL (optional)"
+                  value={formData.image}
+                  onChange={handleInputChange}
+                  className="border-pink-200"
                 />
               </div>
               
@@ -374,6 +387,19 @@ const AdminMenu = () => {
                   value={formData.description}
                   onChange={handleInputChange}
                   className="border-pink-200 min-h-[100px]"
+                />
+              </div>
+              
+              <div className="grid grid-cols-1 gap-2">
+                <Label htmlFor="edit-image">Image URL</Label>
+                <Input
+                  id="edit-image"
+                  name="image"
+                  type="url"
+                  placeholder="Enter image URL (optional)"
+                  value={formData.image}
+                  onChange={handleInputChange}
+                  className="border-pink-200"
                 />
               </div>
               
