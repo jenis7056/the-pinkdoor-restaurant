@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import Layout from "@/components/Layout";
@@ -38,6 +37,7 @@ const AdminMenu = () => {
     category: categories[0]?.name || "",
     subcategory: "",
     isSpecial: false,
+    image: "https://images.unsplash.com/photo-1518770660439-4636190af475"
   });
   const [editingItemId, setEditingItemId] = useState<string | null>(null);
   
@@ -63,7 +63,6 @@ const AdminMenu = () => {
     setFormData((prev) => ({ ...prev, isSpecial: checked }));
   };
 
-  // Simplified dialog open/close without animations that could cause white screen
   const handleOpenAddDialog = () => {
     setFormData({
       name: "",
@@ -72,6 +71,7 @@ const AdminMenu = () => {
       category: categories[0]?.name || "",
       subcategory: "",
       isSpecial: false,
+      image: "https://images.unsplash.com/photo-1518770660439-4636190af475"
     });
     setIsAddDialogOpen(true);
   };
@@ -82,10 +82,29 @@ const AdminMenu = () => {
   
   const handleCloseEditDialog = () => {
     setIsEditDialogOpen(false);
+    setEditingItemId(null);
+  };
+
+  const handleOpenEditDialog = (itemId: string) => {
+    if (!preventRapidClicks(`edit-menu-item-${itemId}`, 500)) return;
+    
+    const item = menuItems.find((item) => item.id === itemId);
+    if (item) {
+      setFormData({
+        name: item.name,
+        price: item.price,
+        description: item.description,
+        category: item.category,
+        subcategory: item.subcategory || "",
+        isSpecial: item.isSpecial || false,
+        image: item.image
+      });
+      setEditingItemId(itemId);
+      setIsEditDialogOpen(true);
+    }
   };
 
   const handleAddItem = () => {
-    // Prevent duplicate submissions
     if (!preventRapidClicks('add-menu-item', 1000)) return;
     
     if (!formData.name || !formData.description || !formData.category || formData.price <= 0) {
@@ -101,31 +120,12 @@ const AdminMenu = () => {
       category: categories[0]?.name || "",
       subcategory: "",
       isSpecial: false,
+      image: "https://images.unsplash.com/photo-1518770660439-4636190af475"
     });
     handleCloseAddDialog();
   };
 
-  const handleOpenEditDialog = (itemId: string) => {
-    // Prevent rapid clicks
-    if (!preventRapidClicks(`edit-menu-item-${itemId}`, 500)) return;
-    
-    const item = menuItems.find((item) => item.id === itemId);
-    if (item) {
-      setFormData({
-        name: item.name,
-        price: item.price,
-        description: item.description,
-        category: item.category,
-        subcategory: item.subcategory,
-        isSpecial: item.isSpecial || false,
-      });
-      setEditingItemId(itemId);
-      setIsEditDialogOpen(true);
-    }
-  };
-
   const handleEditItem = () => {
-    // Prevent duplicate submissions
     if (!preventRapidClicks('edit-menu-item-submit', 1000)) return;
     
     if (!editingItemId) return;
@@ -143,13 +143,13 @@ const AdminMenu = () => {
       category: categories[0]?.name || "",
       subcategory: "",
       isSpecial: false,
+      image: "https://images.unsplash.com/photo-1518770660439-4636190af475"
     });
     setEditingItemId(null);
     handleCloseEditDialog();
   };
 
   const handleDeleteItem = (itemId: string) => {
-    // Prevent rapid clicks
     if (!preventRapidClicks(`delete-menu-item-${itemId}`, 1000)) return;
     deleteMenuItem(itemId);
   };
@@ -216,11 +216,7 @@ const AdminMenu = () => {
           ))}
         </Tabs>
 
-        {/* Add Dialog */}
-        <Dialog 
-          open={isAddDialogOpen} 
-          onOpenChange={setIsAddDialogOpen}
-        >
+        <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
           <DialogContent className="sm:max-w-lg">
             <DialogHeader>
               <DialogTitle>Add New Menu Item</DialogTitle>
@@ -258,7 +254,7 @@ const AdminMenu = () => {
                     name="category"
                     value={formData.category}
                     onValueChange={(value) => 
-                      setFormData((prev) => ({ ...prev, category: value }))
+                      setFormData((prev) => ({ ...prev, category: value, subcategory: "" }))
                     }
                   >
                     <SelectTrigger className="border-pink-200">
@@ -350,11 +346,7 @@ const AdminMenu = () => {
           </DialogContent>
         </Dialog>
 
-        {/* Edit Dialog */}
-        <Dialog 
-          open={isEditDialogOpen} 
-          onOpenChange={setIsEditDialogOpen}
-        >
+        <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
           <DialogContent className="sm:max-w-lg">
             <DialogHeader>
               <DialogTitle>Edit Menu Item</DialogTitle>
@@ -392,7 +384,7 @@ const AdminMenu = () => {
                     name="category"
                     value={formData.category}
                     onValueChange={(value) => 
-                      setFormData((prev) => ({ ...prev, category: value }))
+                      setFormData((prev) => ({ ...prev, category: value, subcategory: "" }))
                     }
                   >
                     <SelectTrigger className="border-pink-200">
