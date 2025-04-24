@@ -6,16 +6,7 @@ export const handleAddMenuItem = (
   item: MenuItem, 
   setMenuItems: React.Dispatch<React.SetStateAction<MenuItem[]>>
 ) => {
-  // Ensure the image URL is valid and not empty
-  const imageUrl = item.image && item.image.trim() !== "" 
-    ? item.image 
-    : "https://images.unsplash.com/photo-1518770660439-4636190af475";
-  
-  setMenuItems(prev => [...prev, { 
-    ...item, 
-    id: crypto.randomUUID(),
-    image: imageUrl
-  }]);
+  setMenuItems(prev => [...prev, { ...item, id: crypto.randomUUID() }]);
   toast.success(`${item.name} has been added to the menu`);
 };
 
@@ -24,18 +15,9 @@ export const handleUpdateMenuItem = (
   item: Partial<MenuItem>, 
   setMenuItems: React.Dispatch<React.SetStateAction<MenuItem[]>>
 ) => {
-  // Ensure the image URL exists and is not empty
-  const updateData = {
-    ...item
-  };
-  
-  if (!updateData.image || updateData.image.trim() === "") {
-    updateData.image = "https://images.unsplash.com/photo-1518770660439-4636190af475";
-  }
-  
   setMenuItems(prev => 
     prev.map(menuItem => 
-      menuItem.id === id ? { ...menuItem, ...updateData } : menuItem
+      menuItem.id === id ? { ...menuItem, ...item } : menuItem
     )
   );
   toast.success(`Menu item updated successfully`);

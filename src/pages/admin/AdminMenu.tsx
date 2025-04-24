@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import Layout from "@/components/Layout";
@@ -19,7 +18,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { ArrowLeft, Plus, Image } from "lucide-react";
+import { ArrowLeft, Plus } from "lucide-react";
 import { toast } from "sonner";
 import { MenuItem } from "@/types";
 import { preventRapidClicks } from "@/lib/performance";
@@ -160,20 +159,6 @@ const AdminMenu = () => {
   const filteredItems = selectedCategory
     ? menuItems.filter(item => item.category === selectedCategory)
     : menuItems;
-
-  const handleImageUrlChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { value } = e.target;
-    setFormData((prev) => ({ ...prev, image: value }));
-  };
-
-  // Define some image options for easy selection
-  const imageOptions = [
-    "https://images.unsplash.com/photo-1518770660439-4636190af475", // Default
-    "https://images.unsplash.com/photo-1618160702438-9b02ab6515c9", // Black and brown fruit
-    "https://images.unsplash.com/photo-1582562124811-c09040d0a901", // Orange tabby cat
-    "https://images.unsplash.com/photo-1535268647677-300dbf3d78d1", // Grey tabby kitten
-    "https://images.unsplash.com/photo-1465146344425-f00d5f5c8f07"  // Orange flowers
-  ];
 
   return (
     <Layout>
@@ -343,55 +328,6 @@ const AdminMenu = () => {
                   </div>
                 </div>
               </div>
-
-              <div className="grid grid-cols-1 gap-2">
-                <Label htmlFor="image">Image URL</Label>
-                <Input
-                  id="image"
-                  name="image"
-                  value={formData.image}
-                  onChange={handleImageUrlChange}
-                  className="border-pink-200"
-                  placeholder="Enter image URL"
-                />
-
-                <div className="mt-2">
-                  <Label className="mb-2 block">Quick Select Images</Label>
-                  <div className="grid grid-cols-5 gap-2">
-                    {imageOptions.map((url, index) => (
-                      <div 
-                        key={index}
-                        className={`relative cursor-pointer rounded-md overflow-hidden border-2 ${
-                          formData.image === url ? 'border-pink-600' : 'border-transparent'
-                        }`}
-                        onClick={() => setFormData(prev => ({ ...prev, image: url }))}
-                      >
-                        <img 
-                          src={url} 
-                          alt={`Option ${index + 1}`}
-                          className="w-full h-12 object-cover" 
-                          onError={(e) => {
-                            (e.target as HTMLImageElement).src = "https://images.unsplash.com/photo-1518770660439-4636190af475";
-                          }}
-                        />
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                {formData.image && (
-                  <div className="mt-3 aspect-w-16 aspect-h-9 rounded-md overflow-hidden">
-                    <img 
-                      src={formData.image} 
-                      alt="Preview" 
-                      className="object-cover w-full h-20" 
-                      onError={(e) => {
-                        (e.target as HTMLImageElement).src = "https://images.unsplash.com/photo-1518770660439-4636190af475";
-                      }}
-                    />
-                  </div>
-                )}
-              </div>
             </div>
             <DialogFooter>
               <Button 
@@ -521,55 +457,6 @@ const AdminMenu = () => {
                     </label>
                   </div>
                 </div>
-              </div>
-
-              <div className="grid grid-cols-1 gap-2">
-                <Label htmlFor="edit-image">Image URL</Label>
-                <Input
-                  id="edit-image"
-                  name="image"
-                  value={formData.image || ''}
-                  onChange={handleImageUrlChange}
-                  className="border-pink-200"
-                  placeholder="Enter image URL"
-                />
-
-                <div className="mt-2">
-                  <Label className="mb-2 block">Quick Select Images</Label>
-                  <div className="grid grid-cols-5 gap-2">
-                    {imageOptions.map((url, index) => (
-                      <div 
-                        key={index}
-                        className={`relative cursor-pointer rounded-md overflow-hidden border-2 ${
-                          formData.image === url ? 'border-pink-600' : 'border-transparent'
-                        }`}
-                        onClick={() => setFormData(prev => ({ ...prev, image: url }))}
-                      >
-                        <img 
-                          src={url} 
-                          alt={`Option ${index + 1}`}
-                          className="w-full h-12 object-cover" 
-                          onError={(e) => {
-                            (e.target as HTMLImageElement).src = "https://images.unsplash.com/photo-1518770660439-4636190af475";
-                          }}
-                        />
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                {formData.image && (
-                  <div className="mt-3 aspect-w-16 aspect-h-9 rounded-md overflow-hidden">
-                    <img 
-                      src={formData.image} 
-                      alt="Preview" 
-                      className="object-cover w-full h-20" 
-                      onError={(e) => {
-                        (e.target as HTMLImageElement).src = "https://images.unsplash.com/photo-1518770660439-4636190af475";
-                      }}
-                    />
-                  </div>
-                )}
               </div>
             </div>
             <DialogFooter>
