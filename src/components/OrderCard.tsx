@@ -88,6 +88,24 @@ const OrderCard = memo(({ order, userRole, updateStatus, onGenerateBill }: Order
     }
   }, []);
 
+  const calculateTaxes = (subtotal: number) => {
+    const sgstRate = 0.025; // 2.50%
+    const cgstRate = 0.025; // 2.50%
+    
+    return {
+      sgst: subtotal * sgstRate,
+      cgst: subtotal * cgstRate
+    };
+  };
+
+  const formatCurrency = (amount: number) => {
+    return new Intl.NumberFormat("en-IN", {
+      style: "currency",
+      currency: "INR",
+      minimumFractionDigits: 0,
+    }).format(amount);
+  };
+
   useEffect(() => {
     setIsLocalProcessing(false);
     if (processingTimeoutRef.current) {
@@ -361,9 +379,30 @@ const OrderCard = memo(({ order, userRole, updateStatus, onGenerateBill }: Order
             
             <Separator />
             
-            <div className="flex justify-between font-medium pt-2">
-              <span>Total</span>
-              <span>{totalAmount}</span>
+            <div className="space-y-2">
+              <div className="flex justify-between text-gray-600">
+                <span>Subtotal</span>
+                <span>{formatCurrency(order.totalAmount)}</span>
+              </div>
+              <div className="flex justify-between text-gray-600">
+                <span>CGST @2.50%</span>
+                <span>{formatCurrency(calculateTaxes(order.totalAmount).cgst)}</span>
+              </div>
+              <div className="flex justify-between text-gray-600">
+                <span>SGST @2.50%</span>
+                <span>{formatCurrency(calculateTaxes(order.totalAmount).sgst)}</span>
+              </div>
+              <Separator />
+              <div className="flex justify-between font-medium text-lg">
+                <span>Total with Tax</span>
+                <span className="text-pink-900">
+                  {formatCurrency(
+                    order.totalAmount + 
+                    calculateTaxes(order.totalAmount).cgst + 
+                    calculateTaxes(order.totalAmount).sgst
+                  )}
+                </span>
+              </div>
             </div>
           </div>
         )}
