@@ -1,4 +1,3 @@
-
 import { useNavigate } from "react-router-dom";
 import { useApp } from "@/contexts/AppContext";
 import { UserRole } from "@/types";
@@ -64,7 +63,7 @@ const Header = ({
           />
         
           <div className="flex items-center space-x-3">
-            <div className="rounded-full overflow-hidden border-2 border-pink-200 p-0.5 bg-white">
+            <div className="rounded-full overflow-hidden border-2 border-pink-200">
               <img 
                 src="/lovable-uploads/2f3b9546-8ad0-405f-b2ff-ce03774b7784.png"
                 alt="The Pink Door Logo"
