@@ -134,7 +134,6 @@ const CustomerRegistration = () => {
 
               <div className="text-sm text-gray-500">
                 <p>Please check your table for the correct table number (1-15) or ask your waiter.</p>
-                <p className="mt-1">You can reserve a currently occupied table if your reservation is at least 1 hour after it's expected to be available.</p>
               </div>
             </CardContent>
             

@@ -7,8 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, Calendar, ExternalLink, Search, Users } from "lucide-react";
-import { format } from "date-fns";
+import { ArrowLeft, ExternalLink, Search, Users } from "lucide-react";
 
 const WaiterTables = () => {
   const navigate = useNavigate();
@@ -34,19 +33,6 @@ const WaiterTables = () => {
     return customers.filter(customer => customer.tableNumber === tableNumber);
   };
 
-  // Get reservations for a table
-  const getReservationsByTable = (tableNumber: number) => {
-    return customers.filter(customer => 
-      customer.tableNumber === tableNumber && 
-      customer.reservationTime &&
-      new Date(customer.reservationTime) > new Date() // Only future reservations
-    ).sort((a, b) => {
-      const timeA = new Date(a.reservationTime || "").getTime();
-      const timeB = new Date(b.reservationTime || "").getTime();
-      return timeA - timeB; // Sort by time ascending
-    });
-  };
-
   // Get orders by table
   const getActiveOrdersByTable = (tableNumber: number) => {
     return orders.filter(
@@ -57,7 +43,6 @@ const WaiterTables = () => {
   const getTableStatus = (tableNumber: number) => {
     const activeOrders = getActiveOrdersByTable(tableNumber);
     const tableCustomers = getCustomersByTable(tableNumber);
-    const reservations = getReservationsByTable(tableNumber);
     
     if (activeOrders.length > 0) {
       const statuses = activeOrders.map(order => order.status);
@@ -70,8 +55,6 @@ const WaiterTables = () => {
     
     if (tableCustomers.length > 0) return "occupied";
     
-    if (reservations.length > 0) return "reserved";
-    
     return "available";
   };
 
@@ -83,7 +66,6 @@ const WaiterTables = () => {
   const statusLabels = {
     available: "Available",
     occupied: "Occupied",
-    reserved: "Reserved",
     pending: "Order Pending",
     confirmed: "Order Confirmed",
     preparing: "Preparing",
@@ -94,18 +76,11 @@ const WaiterTables = () => {
   const statusClasses = {
     available: "bg-green-100 text-green-800",
     occupied: "bg-blue-100 text-blue-800",
-    reserved: "bg-purple-100 text-purple-800",
     pending: "bg-yellow-100 text-yellow-800",
     confirmed: "bg-indigo-100 text-indigo-800",
     preparing: "bg-orange-100 text-orange-800",
     ready: "bg-emerald-100 text-emerald-800",
     served: "bg-purple-100 text-purple-800",
-  };
-
-  // Format reservation time in a readable format
-  const formatReservationTime = (dateTimeString: string) => {
-    const date = new Date(dateTimeString);
-    return format(date, "MMM dd, yyyy 'at' h:mm a");
   };
 
   return (
@@ -144,7 +119,6 @@ const WaiterTables = () => {
             const status = getTableStatus(tableNumber);
             const tableCustomers = getCustomersByTable(tableNumber);
             const tableOrders = getActiveOrdersByTable(tableNumber);
-            const reservations = getReservationsByTable(tableNumber);
             
             return (
               <Card key={tableNumber} className="border border-pink-100">
@@ -183,27 +157,8 @@ const WaiterTables = () => {
                         </div>
                       )}
                     </div>
-                  ) : reservations.length > 0 ? (
-                    <div>
-                      <h3 className="font-medium text-sm mb-2">Upcoming Reservations:</h3>
-                      <ul className="space-y-2">
-                        {reservations.map((reservation) => (
-                          <li key={reservation.id} className="text-sm">
-                            <div className="flex items-start">
-                              <Calendar className="h-4 w-4 mr-2 text-pink-600 mt-0.5" />
-                              <div>
-                                <div className="font-medium">{reservation.name}</div>
-                                <div className="text-xs text-gray-600">
-                                  {reservation.reservationTime && formatReservationTime(reservation.reservationTime)}
-                                </div>
-                              </div>
-                            </div>
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
                   ) : (
-                    <p className="text-gray-500">No customers or reservations</p>
+                    <p className="text-gray-500">No customers at this table</p>
                   )}
                 </CardContent>
                 <CardFooter className="pt-2 flex justify-between">
