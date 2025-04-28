@@ -40,17 +40,6 @@ export const handleRegisterCustomer = (
     }
   }
   
-  // Check if table has any incomplete orders
-  const ordersArray = Array.isArray(orders) ? orders : [];
-  
-  const hasIncompleteOrders = ordersArray.some(
-    order => order.tableNumber === tableNumber && order.status !== 'completed'
-  );
-  
-  if (hasIncompleteOrders) {
-    throw new Error("This table currently has active orders. Please choose another table.");
-  }
-  
   const newCustomer: Customer = {
     id: crypto.randomUUID(),
     name,
