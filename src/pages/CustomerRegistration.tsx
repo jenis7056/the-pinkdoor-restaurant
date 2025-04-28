@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useApp } from "@/contexts/AppContext";
@@ -7,10 +8,12 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
+import { Clock } from "lucide-react";
 
 const CustomerRegistration = () => {
   const [name, setName] = useState("");
   const [tableNumber, setTableNumber] = useState("");
+  const [reservationTime, setReservationTime] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
   const { registerCustomer, customers, orders } = useApp();
@@ -34,6 +37,21 @@ const CustomerRegistration = () => {
       return;
     }
 
+    if (!reservationTime) {
+      toast.error("Please select a reservation time");
+      return;
+    }
+
+    // Check if selected time is at least 3 hours from now
+    const selectedTime = new Date(reservationTime);
+    const currentTime = new Date();
+    const threeHoursFromNow = new Date(currentTime.getTime() + (3 * 60 * 60 * 1000));
+
+    if (selectedTime < threeHoursFromNow) {
+      toast.error("Reservation must be at least 3 hours in advance");
+      return;
+    }
+
     setIsLoading(true);
     
     try {
@@ -48,6 +66,13 @@ const CustomerRegistration = () => {
     }
   };
 
+  // Calculate minimum allowed time (3 hours from now)
+  const getMinDateTime = () => {
+    const now = new Date();
+    now.setHours(now.getHours() + 3);
+    return now.toISOString().slice(0, 16); // Format: YYYY-MM-DDTHH:mm
+  };
+
   return (
     <Layout>
       <div className="container max-w-md mx-auto py-16 px-4">
@@ -55,7 +80,7 @@ const CustomerRegistration = () => {
           <CardHeader>
             <CardTitle className="text-2xl font-playfair text-center text-pink-900">Make a Reservation</CardTitle>
             <CardDescription className="text-center">
-              Please enter your details to access the digital menu
+              Please enter your details to reserve a table
             </CardDescription>
           </CardHeader>
           
@@ -88,6 +113,25 @@ const CustomerRegistration = () => {
                 />
               </div>
 
+              <div className="space-y-2">
+                <Label htmlFor="reservationTime" className="flex items-center gap-2">
+                  <Clock className="h-4 w-4" />
+                  Reservation Time
+                </Label>
+                <Input
+                  id="reservationTime"
+                  type="datetime-local"
+                  value={reservationTime}
+                  onChange={(e) => setReservationTime(e.target.value)}
+                  min={getMinDateTime()}
+                  disabled={isLoading}
+                  className="border-pink-200 focus-visible:ring-pink-500"
+                />
+                <p className="text-sm text-gray-500">
+                  Reservations must be made at least 3 hours in advance
+                </p>
+              </div>
+
               <div className="text-sm text-gray-500">
                 <p>Please check your table for the correct table number (1-15) or ask your waiter.</p>
               </div>
@@ -99,7 +143,7 @@ const CustomerRegistration = () => {
                 className="w-full bg-pink-700 hover:bg-pink-800" 
                 disabled={isLoading}
               >
-                {isLoading ? "Registering..." : "Register & View Menu"}
+                {isLoading ? "Processing..." : "Confirm Reservation"}
               </Button>
             </CardFooter>
           </form>
