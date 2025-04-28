@@ -64,11 +64,13 @@ const Header = ({
           />
         
           <div className="flex items-center space-x-3">
-            <img 
-              src="/lovable-uploads/2f3b9546-8ad0-405f-b2ff-ce03774b7784.png"
-              alt="The Pink Door Logo"
-              className="h-10 w-10 object-contain"
-            />
+            <div className="rounded-full overflow-hidden border-2 border-pink-200 p-0.5 bg-white">
+              <img 
+                src="/lovable-uploads/2f3b9546-8ad0-405f-b2ff-ce03774b7784.png"
+                alt="The Pink Door Logo"
+                className="h-9 w-9 rounded-full object-contain"
+              />
+            </div>
             <div className="flex flex-col">
               <h1 
                 className="text-xl md:text-2xl font-playfair font-semibold cursor-pointer hover:text-pink-200 transition-colors duration-300 ease-in-out"
