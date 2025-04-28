@@ -1,4 +1,3 @@
-
 import { Customer, Order } from "@/types";
 import { toast } from "sonner";
 import { clearTabCustomerData, getTabId } from "./localStorageHelpers";
@@ -9,7 +8,8 @@ export const handleRegisterCustomer = (
   setCustomers: React.Dispatch<React.SetStateAction<Customer[]>>,
   setCurrentCustomer: React.Dispatch<React.SetStateAction<Customer | null>>,
   customers: Customer[],
-  orders: Order[]
+  orders: Order[],
+  reservationTime?: string
 ) => {
   // Clear any existing customer data in this tab first
   clearTabCustomerData();
@@ -18,20 +18,37 @@ export const handleRegisterCustomer = (
   if (tableNumber < 1 || tableNumber > 15) {
     throw new Error("Table number must be between 1 and 15");
   }
-  
-  // Check if table is already occupied by another customer
-  const isTableOccupied = customers.some(customer => customer.tableNumber === tableNumber);
-  
-  // Ensure orders is an array before calling .some() on it
-  const ordersArray = Array.isArray(orders) ? orders : [];
+
+  if (reservationTime) {
+    const selectedTime = new Date(reservationTime);
+    
+    // Check if table is already reserved by another customer at the same time
+    const isTableReserved = customers.some(customer => {
+      // Only check if the customer has a reservation time and the same table number
+      if (customer.reservationTime && customer.tableNumber === tableNumber) {
+        const existingReservation = new Date(customer.reservationTime);
+        // Check if reservations overlap (within 2 hours before or after)
+        const timeDiff = Math.abs(selectedTime.getTime() - existingReservation.getTime());
+        const hoursDiff = timeDiff / (1000 * 60 * 60);
+        return hoursDiff < 2; // Less than 2 hours difference means overlap
+      }
+      return false;
+    });
+
+    if (isTableReserved) {
+      throw new Error("This table is already reserved for this time slot. Please choose another table or time.");
+    }
+  }
   
   // Check if table has any incomplete orders
+  const ordersArray = Array.isArray(orders) ? orders : [];
+  
   const hasIncompleteOrders = ordersArray.some(
     order => order.tableNumber === tableNumber && order.status !== 'completed'
   );
   
-  if (isTableOccupied || hasIncompleteOrders) {
-    throw new Error("This table is currently occupied. Please choose another table.");
+  if (hasIncompleteOrders) {
+    throw new Error("This table currently has active orders. Please choose another table.");
   }
   
   const newCustomer: Customer = {
@@ -39,12 +56,13 @@ export const handleRegisterCustomer = (
     name,
     tableNumber,
     createdAt: new Date().toISOString(),
-    tabId: getTabId() // Store the tab ID with the customer
+    tabId: getTabId(),
+    reservationTime // Add the reservation time to the customer object
   };
   
   setCustomers(prev => [...prev, newCustomer]);
   setCurrentCustomer(newCustomer);
-  toast.success(`Welcome, ${name}! You are now registered at table ${tableNumber}`);
+  toast.success(`Welcome, ${name}! Your table ${tableNumber} has been reserved for ${new Date(reservationTime!).toLocaleString()}`);
   
   return newCustomer;
 };

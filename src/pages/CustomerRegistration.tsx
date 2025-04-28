@@ -55,7 +55,7 @@ const CustomerRegistration = () => {
     setIsLoading(true);
     
     try {
-      registerCustomer(name, tableNum);
+      registerCustomer(name, tableNum, reservationTime);
       
       setTimeout(() => {
         navigate("/customer");
