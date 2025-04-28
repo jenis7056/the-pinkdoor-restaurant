@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useApp } from "@/contexts/AppContext";
@@ -54,7 +53,7 @@ const CustomerRegistration = () => {
       <div className="container max-w-md mx-auto py-16 px-4">
         <Card className="border-pink-100">
           <CardHeader>
-            <CardTitle className="text-2xl font-playfair text-center text-pink-900">Customer Registration</CardTitle>
+            <CardTitle className="text-2xl font-playfair text-center text-pink-900">Make a Reservation</CardTitle>
             <CardDescription className="text-center">
               Please enter your details to access the digital menu
             </CardDescription>
