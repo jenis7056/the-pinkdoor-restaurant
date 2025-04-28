@@ -17,7 +17,7 @@ export interface AppContextType {
   // Customer Management
   customers: Customer[];
   currentCustomer: Customer | null;
-  registerCustomer: (name: string, tableNumber: number, reservationTime?: string) => void;
+  registerCustomer: (name: string, tableNumber: number) => void;
   removeCustomer: (id: string) => void;
   
   // Order Management

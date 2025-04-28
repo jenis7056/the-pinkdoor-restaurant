@@ -1,3 +1,4 @@
+
 import { useNavigate } from "react-router-dom";
 import Layout from "@/components/Layout";
 import { Button } from "@/components/ui/button";
@@ -13,6 +14,7 @@ const Index = () => {
   const { currentUser, currentCustomer } = useApp();
   const currentTabId = getTabId();
 
+  // Function to handle direct navigation to role pages
   const goToRolePage = (role: UserRole) => {
     const rolePages: Record<UserRole, string> = {
       admin: "/admin",
@@ -23,10 +25,12 @@ const Index = () => {
     navigate(rolePages[role]);
   };
 
+  // Only show customer button if it's for this tab
   const isCurrentTabCustomer = currentCustomer && 
     (!currentCustomer.tabId || currentCustomer.tabId === currentTabId);
 
   const renderRoleCards = () => {
+    // If user is already logged in, show their dashboard button
     if (currentUser) {
       return (
         <div className="mt-8">
@@ -44,6 +48,7 @@ const Index = () => {
       );
     }
 
+    // Otherwise, show login options for all roles
     return (
       <div className="mt-8">
         <div className="flex flex-col items-center">
@@ -58,12 +63,12 @@ const Index = () => {
                     <Clipboard className="h-8 w-8 text-pink-800" />
                   </div>
                   <h4 className="text-xl font-medium mb-4">Browse Our Menu</h4>
-                  <p className="text-sm text-gray-600 mb-6">Make a reservation to explore our delicious vegetarian dishes</p>
+                  <p className="text-sm text-gray-600 mb-6">Register to explore our delicious vegetarian dishes</p>
                   <Button 
                     className="bg-pink-700 hover:bg-pink-800 w-full"
                     onClick={() => navigate("/customer-registration")}
                   >
-                    Make Reservation
+                    Register as Customer
                   </Button>
                 </div>
               </CardContent>
@@ -74,6 +79,7 @@ const Index = () => {
             Staff Portals
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
+            {/* Admin Portal Card */}
             <Card className="bg-gradient-to-br from-pink-50 to-white border-pink-100 hover:shadow-md transition-shadow">
               <CardContent className="p-6">
                 <div className="flex flex-col items-center text-center">
@@ -92,6 +98,7 @@ const Index = () => {
               </CardContent>
             </Card>
 
+            {/* Waiter Portal Card */}
             <Card className="bg-gradient-to-br from-pink-50 to-white border-pink-100 hover:shadow-md transition-shadow">
               <CardContent className="p-6">
                 <div className="flex flex-col items-center text-center">
@@ -110,6 +117,7 @@ const Index = () => {
               </CardContent>
             </Card>
 
+            {/* Chef Portal Card */}
             <Card className="bg-gradient-to-br from-pink-50 to-white border-pink-100 hover:shadow-md transition-shadow">
               <CardContent className="p-6">
                 <div className="flex flex-col items-center text-center">

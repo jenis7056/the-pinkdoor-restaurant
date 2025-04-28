@@ -9,8 +9,7 @@ export const handleRegisterCustomer = (
   setCustomers: React.Dispatch<React.SetStateAction<Customer[]>>,
   setCurrentCustomer: React.Dispatch<React.SetStateAction<Customer | null>>,
   customers: Customer[],
-  orders: Order[],
-  reservationTime?: string
+  orders: Order[]
 ) => {
   // Clear any existing customer data in this tab first
   clearTabCustomerData();
@@ -19,51 +18,33 @@ export const handleRegisterCustomer = (
   if (tableNumber < 1 || tableNumber > 15) {
     throw new Error("Table number must be between 1 and 15");
   }
-
-  if (reservationTime) {
-    const selectedTime = new Date(reservationTime);
-    
-    // Check if table is already reserved by another customer at the same time
-    const isTableReserved = customers.some(customer => {
-      // Only check if the customer has a reservation time and the same table number
-      if (customer.reservationTime && customer.tableNumber === tableNumber) {
-        const existingReservation = new Date(customer.reservationTime);
-        // Check if reservations overlap (within 2 hours before or after)
-        const timeDiff = Math.abs(selectedTime.getTime() - existingReservation.getTime());
-        const hoursDiff = timeDiff / (1000 * 60 * 60);
-        return hoursDiff < 2; // Less than 2 hours difference means overlap
-      }
-      return false;
-    });
-
-    if (isTableReserved) {
-      throw new Error("This table is already reserved for this time slot. Please choose another table or time.");
-    }
+  
+  // Check if table is already occupied by another customer
+  const isTableOccupied = customers.some(customer => customer.tableNumber === tableNumber);
+  
+  // Ensure orders is an array before calling .some() on it
+  const ordersArray = Array.isArray(orders) ? orders : [];
+  
+  // Check if table has any incomplete orders
+  const hasIncompleteOrders = ordersArray.some(
+    order => order.tableNumber === tableNumber && order.status !== 'completed'
+  );
+  
+  if (isTableOccupied || hasIncompleteOrders) {
+    throw new Error("This table is currently occupied. Please choose another table.");
   }
-
-  // Generate a random token between 1 and 15
-  const existingTokens = new Set(customers.map(c => c.reservationToken));
-  let reservationToken: number;
-  do {
-    reservationToken = Math.floor(Math.random() * 15) + 1;
-  } while (existingTokens.has(reservationToken));
   
   const newCustomer: Customer = {
     id: crypto.randomUUID(),
     name,
     tableNumber,
     createdAt: new Date().toISOString(),
-    tabId: getTabId(),
-    reservationTime,
-    reservationToken
+    tabId: getTabId() // Store the tab ID with the customer
   };
   
   setCustomers(prev => [...prev, newCustomer]);
   setCurrentCustomer(newCustomer);
-  
-  toast.success(
-    `Welcome, ${name}! Your table ${tableNumber} has been reserved for ${new Date(reservationTime!).toLocaleString()}. Your reservation token is: ${reservationToken}`
-  );
+  toast.success(`Welcome, ${name}! You are now registered at table ${tableNumber}`);
   
   return newCustomer;
 };

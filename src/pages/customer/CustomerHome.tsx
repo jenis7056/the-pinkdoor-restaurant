@@ -1,11 +1,10 @@
+
 import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import Layout from "@/components/Layout";
+import MenuSection from "@/components/MenuSection";
 import { useApp } from "@/contexts/AppContext";
 import { Button } from "@/components/ui/button";
-import { Clock } from "lucide-react";
-import { toast } from "sonner";
-import MenuSection from "@/components/MenuSection";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ChevronRight, ShoppingCart, ClipboardList, LogOut } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
@@ -18,26 +17,6 @@ const CustomerHome = () => {
   const { menuItems, categories, currentCustomer, cart, orders, logout, setOrders } = useApp();
   const [selectedCategory, setSelectedCategory] = useState<string>("");
   const [isLoading, setIsLoading] = useState(true);
-
-  useEffect(() => {
-    if (!currentCustomer) {
-      navigate("/customer-registration");
-      return;
-    }
-
-    // Check if customer has a reservation time
-    if (currentCustomer.reservationTime) {
-      const reservationTime = new Date(currentCustomer.reservationTime);
-      const currentTime = new Date();
-      const hoursDifference = (reservationTime.getTime() - currentTime.getTime()) / (1000 * 60 * 60);
-
-      // If more than 3 hours until reservation
-      if (hoursDifference > 3) {
-        toast.error("Menu will be available 3 hours before your reservation");
-        navigate("/");
-      }
-    }
-  }, [currentCustomer, navigate]);
 
   // Set initial category when categories are loaded
   useEffect(() => {
@@ -78,21 +57,8 @@ const CustomerHome = () => {
   }, [currentCustomer, navigate, isLoading]);
 
   // If still loading or no customer, show nothing
-  if (!currentCustomer?.reservationTime) {
-    return (
-      <Layout>
-        <div className="container mx-auto px-4 py-16 text-center">
-          <h1 className="text-3xl font-playfair font-bold text-pink-900 mb-4">Reservation Required</h1>
-          <p className="text-gray-600 mb-8">Please make a reservation to view our menu.</p>
-          <Button 
-            onClick={() => navigate("/customer-registration")}
-            className="bg-pink-700 hover:bg-pink-800"
-          >
-            Make a Reservation
-          </Button>
-        </div>
-      </Layout>
-    );
+  if (!currentCustomer) {
+    return null;
   }
 
   const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
@@ -143,11 +109,6 @@ const CustomerHome = () => {
               <p className="text-gray-600">
                 Welcome, {currentCustomer.name}! Browse our selections and add items to your order.
               </p>
-              <p className="text-gray-600 flex items-center gap-2">
-                <Clock className="h-4 w-4" />
-                Your reservation is for {new Date(currentCustomer.reservationTime).toLocaleString()}
-              </p>
-              <p className="text-gray-600">Table: {currentCustomer.tableNumber}</p>
             </div>
             
             <div className="mt-4 md:mt-0 flex space-x-2">
