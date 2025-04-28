@@ -63,16 +63,23 @@ const Header = ({
             logout={logout}
           />
         
-          <div className="flex flex-col">
-            <h1 
-              className="text-xl md:text-2xl font-playfair font-semibold cursor-pointer hover:text-pink-200 transition-colors duration-300 ease-in-out"
-              onClick={() => navigate("/")}
-            >
-              {title}
-            </h1>
-            <p className="text-xs md:text-sm text-pink-200 italic font-playfair">
-              {subtitle}
-            </p>
+          <div className="flex items-center space-x-3">
+            <img 
+              src="/lovable-uploads/2f3b9546-8ad0-405f-b2ff-ce03774b7784.png"
+              alt="The Pink Door Logo"
+              className="h-10 w-10 object-contain"
+            />
+            <div className="flex flex-col">
+              <h1 
+                className="text-xl md:text-2xl font-playfair font-semibold cursor-pointer hover:text-pink-200 transition-colors duration-300 ease-in-out"
+                onClick={() => navigate("/")}
+              >
+                {title}
+              </h1>
+              <p className="text-xs md:text-sm text-pink-200 italic font-playfair">
+                {subtitle}
+              </p>
+            </div>
           </div>
         </div>
 
