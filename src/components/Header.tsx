@@ -68,7 +68,7 @@ const Header = ({
               <img 
                 src="/lovable-uploads/486096ed-2f96-4f7a-ac96-ff72daa97cb3.png"
                 alt="The Pink Door Logo"
-                className="h-9 w-9 rounded-full object-contain"
+                className="h-12 w-12 rounded-full object-contain"
               />
             </div>
             <div className="flex flex-col">
