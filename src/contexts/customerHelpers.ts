@@ -1,3 +1,4 @@
+
 import { Customer, Order } from "@/types";
 import { toast } from "sonner";
 import { clearTabCustomerData, getTabId } from "./localStorageHelpers";
@@ -39,6 +40,13 @@ export const handleRegisterCustomer = (
       throw new Error("This table is already reserved for this time slot. Please choose another table or time.");
     }
   }
+
+  // Generate a random token between 1 and 15
+  const existingTokens = new Set(customers.map(c => c.reservationToken));
+  let reservationToken: number;
+  do {
+    reservationToken = Math.floor(Math.random() * 15) + 1;
+  } while (existingTokens.has(reservationToken));
   
   const newCustomer: Customer = {
     id: crypto.randomUUID(),
@@ -46,12 +54,16 @@ export const handleRegisterCustomer = (
     tableNumber,
     createdAt: new Date().toISOString(),
     tabId: getTabId(),
-    reservationTime // Add the reservation time to the customer object
+    reservationTime,
+    reservationToken
   };
   
   setCustomers(prev => [...prev, newCustomer]);
   setCurrentCustomer(newCustomer);
-  toast.success(`Welcome, ${name}! Your table ${tableNumber} has been reserved for ${new Date(reservationTime!).toLocaleString()}`);
+  
+  toast.success(
+    `Welcome, ${name}! Your table ${tableNumber} has been reserved for ${new Date(reservationTime!).toLocaleString()}. Your reservation token is: ${reservationToken}`
+  );
   
   return newCustomer;
 };

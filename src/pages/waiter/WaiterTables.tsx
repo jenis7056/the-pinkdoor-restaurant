@@ -50,7 +50,14 @@ const WaiterTables = () => {
               <CardContent>
                 {reservations.map(reservation => (
                   <div key={reservation.id} className="mb-4 last:mb-0 p-3 bg-pink-50 rounded-md">
-                    <p className="font-medium text-pink-900">{reservation.name}</p>
+                    <p className="font-medium text-pink-900">
+                      {reservation.name}
+                      {reservation.reservationToken && 
+                        <span className="ml-2 text-sm text-pink-700">
+                          (Token: {reservation.reservationToken})
+                        </span>
+                      }
+                    </p>
                     <div className="flex items-center gap-2 text-gray-600 text-sm">
                       <Calendar className="h-4 w-4" />
                       <span>{new Date(reservation.reservationTime!).toLocaleDateString()}</span>

@@ -16,6 +16,7 @@ export interface Customer {
   createdAt: string;
   tabId?: string;
   reservationTime?: string;
+  reservationToken?: number;
 }
 
 // Menu Items

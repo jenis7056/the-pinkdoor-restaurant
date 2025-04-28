@@ -11,14 +11,12 @@ const AdminOrders = () => {
   const { currentUser, customers, orders, updateOrderStatus } = useApp();
   const [activeTab, setActiveTab] = useState<"pending" | "confirmed" | "preparing" | "ready" | "served" | "completed">("pending");
 
-  // Redirect if not logged in as admin
   useEffect(() => {
     if (!currentUser || currentUser.role !== "admin") {
       navigate("/login");
     }
   }, [currentUser, navigate]);
 
-  // Get all upcoming reservations
   const upcomingReservations = customers.filter(customer => customer.reservationTime).sort((a, b) => {
     const timeA = new Date(a.reservationTime!).getTime();
     const timeB = new Date(b.reservationTime!).getTime();
@@ -44,7 +42,10 @@ const AdminOrders = () => {
               <Card key={reservation.id} className="border-pink-100">
                 <CardHeader>
                   <CardTitle className="font-playfair text-pink-900">{reservation.name}</CardTitle>
-                  <CardDescription>Table {reservation.tableNumber}</CardDescription>
+                  <CardDescription>
+                    Table {reservation.tableNumber} 
+                    {reservation.reservationToken && ` - Token: ${reservation.reservationToken}`}
+                  </CardDescription>
                 </CardHeader>
                 <CardContent>
                   <div className="flex items-center gap-2 text-gray-600">
